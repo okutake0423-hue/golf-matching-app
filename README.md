@@ -183,7 +183,34 @@ npm run dev
    ```
    → `.git`フォルダが作成されます
 
-   **ステップ5: ファイルをGitに追加**
+   **ステップ5: Gitのユーザー情報を設定（初回のみ）**
+   
+   Gitでコミットするには、ユーザー名とメールアドレスを設定する必要があります。
+   
+   **グローバル設定（すべてのリポジトリで使用）:**
+   ```cmd
+   git config --global user.name "Your Name"
+   git config --global user.email "your.email@example.com"
+   ```
+   → `Your Name`を自分の名前（例: `Takes`）に置き換えてください
+   → `your.email@example.com`を自分のメールアドレス（GitHubに登録したメールアドレス推奨）に置き換えてください
+   → 例: `git config --global user.name "Takes"`、`git config --global user.email "takes@example.com"`
+   
+   **このリポジトリのみに設定する場合:**
+   ```cmd
+   git config user.name "Your Name"
+   git config user.email "your.email@example.com"
+   ```
+   → `--global`を付けないと、このリポジトリのみに設定されます
+   
+   **設定の確認:**
+   ```cmd
+   git config --global user.name
+   git config --global user.email
+   ```
+   → 設定した値が表示されればOKです
+
+   **ステップ6: ファイルをGitに追加**
    
    ```cmd
    git add .
@@ -191,7 +218,7 @@ npm run dev
    → プロジェクト内のすべてのファイルがステージングエリアに追加されます
    → `.gitignore`に記載されているファイル（`node_modules`、`.env.local`など）は除外されます
 
-   **ステップ6: 初回コミットを作成**
+   **ステップ7: 初回コミットを作成**
    
    ```cmd
    git commit -m "Initial commit"
@@ -199,7 +226,7 @@ npm run dev
    → 変更をローカルのGitリポジトリに保存します
    → `-m "Initial commit"`はコミットメッセージです
 
-   **ステップ7: GitHubリポジトリと接続**
+   **ステップ8: GitHubリポジトリと接続**
    
    ```cmd
    git remote add origin https://github.com/your-username/golf-matching-app.git
@@ -208,14 +235,14 @@ npm run dev
    → 例: `https://github.com/takes/golf-matching-app.git`
    → これでローカルのリポジトリとGitHubのリポジトリが接続されます
 
-   **ステップ8: ブランチ名をmainに変更（必要に応じて）**
+   **ステップ9: ブランチ名をmainに変更（必要に応じて）**
    
    ```cmd
    git branch -M main
    ```
    → ブランチ名を`main`に変更します（GitHubのデフォルトに合わせるため）
 
-   **ステップ9: GitHubにコードをアップロード**
+   **ステップ10: GitHubにコードをアップロード**
    
    ```cmd
    git push -u origin main
