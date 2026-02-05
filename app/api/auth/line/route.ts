@@ -60,10 +60,21 @@ export async function POST(request: NextRequest) {
         } else {
           // サービスアカウントJSONファイルから初期化を試みる
           try {
-            const serviceAccount = await import('@/firebase-admin-key.json');
-            admin.initializeApp({
-              credential: admin.credential.cert(serviceAccount.default as admin.ServiceAccount),
-            });
+            // 動的インポートでJSONファイルを読み込む（存在する場合のみ）
+            const serviceAccountModule = await import('@/firebase-admin-key.json').catch(() => null);
+            if (serviceAccountModule && serviceAccountModule.default) {
+              admin.initializeApp({
+                credential: admin.credential.cert(serviceAccountModule.default as any),
+              });
+            } else {
+              return NextResponse.json(
+                { 
+                  message: 'Firebase Admin SDKの設定が見つかりません。環境変数またはfirebase-admin-key.jsonを設定してください。',
+                  error: 'Firebase Admin SDK not configured'
+                },
+                { status: 500 }
+              );
+            }
           } catch (jsonError) {
             return NextResponse.json(
               { 
