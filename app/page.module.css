@@ -1,0 +1,113 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.main {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+  padding: 40px;
+}
+
+.error {
+  background-color: #fee;
+  color: #c33;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login {
+  text-align: center;
+}
+
+.loginMessage {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.profile {
+  text-align: center;
+}
+
+.profileTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.profileImage {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: block;
+  object-fit: cover;
+  border: 3px solid #06c755;
+}
+
+.profileInfo {
+  text-align: left;
+  margin-bottom: 30px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.profileItem {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #333;
+}
+
+.profileItem strong {
+  color: #666;
+  margin-right: 8px;
+}
+
+.button {
+  background-color: #06c755;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+  max-width: 300px;
+}
+
+.button:hover {
+  background-color: #05b048;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
