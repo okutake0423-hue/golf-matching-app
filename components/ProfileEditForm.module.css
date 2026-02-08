@@ -1,0 +1,97 @@
+.form {
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #333;
+  text-align: center;
+}
+
+.error {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #06c755;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.buttonSubmit {
+  background-color: #06c755;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.buttonSubmit:hover:not(:disabled) {
+  background-color: #05b048;
+}
+
+.buttonSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.buttonCancel {
+  background-color: #eee;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.buttonCancel:hover:not(:disabled) {
+  background-color: #ddd;
+}
+
+.buttonCancel:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

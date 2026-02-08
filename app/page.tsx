@@ -1,14 +1,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { initLiff, isLoggedIn, login, logout, getProfile, type Profile } from '@/lib/liff';
+import { getUserProfile } from '@/lib/firestore';
+import { ProfileDisplay } from '@/components/ProfileDisplay';
+import type { UserProfileDisplay } from '@/types/profile';
 import styles from './page.module.css';
 
 export default function Home() {
+  const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<UserProfileDisplay | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const loadMergedProfile = async (lineProfile: Profile) => {
+    const stored = await getUserProfile(lineProfile.userId);
+    return {
+      userId: lineProfile.userId,
+      displayName: lineProfile.displayName,
+      pictureUrl: lineProfile.pictureUrl,
+      statusMessage: lineProfile.statusMessage,
+      companyName: stored?.companyName ?? '',
+      averageScore: stored?.averageScore ?? null,
+      playStyle: stored?.playStyle ?? '',
+    } satisfies UserProfileDisplay;
+  };
 
   useEffect(() => {
     const initialize = async () => {
@@ -17,9 +35,9 @@ export default function Home() {
         setIsInitialized(initialized);
 
         if (initialized && isLoggedIn()) {
-          // ログイン済みの場合、プロフィールを取得
-          const userProfile = await getProfile();
-          setProfile(userProfile);
+          const lineProfile = await getProfile();
+          const merged = await loadMergedProfile(lineProfile);
+          setProfile(merged);
         }
       } catch (err) {
         console.error('Initialization error:', err);
@@ -36,9 +54,9 @@ export default function Home() {
     try {
       setIsLoading(true);
       await login();
-      // ログイン後、プロフィールを取得
-      const userProfile = await getProfile();
-      setProfile(userProfile);
+      const lineProfile = await getProfile();
+      const merged = await loadMergedProfile(lineProfile);
+      setProfile(merged);
     } catch (err) {
       console.error('Login error:', err);
       setError('ログインに失敗しました');
@@ -55,6 +73,10 @@ export default function Home() {
       console.error('Logout error:', err);
       setError('ログアウトに失敗しました');
     }
+  };
+
+  const handleEdit = () => {
+    router.push('/profile/edit');
   };
 
   if (isLoading) {
@@ -91,32 +113,11 @@ export default function Home() {
         {error && <div className={styles.error}>{error}</div>}
 
         {profile ? (
-          <div className={styles.profile}>
-            <h2 className={styles.profileTitle}>プロフィール</h2>
-            {profile.pictureUrl && (
-              <img
-                src={profile.pictureUrl}
-                alt={profile.displayName}
-                className={styles.profileImage}
-              />
-            )}
-            <div className={styles.profileInfo}>
-              <p className={styles.profileItem}>
-                <strong>表示名:</strong> {profile.displayName}
-              </p>
-              <p className={styles.profileItem}>
-                <strong>ユーザーID:</strong> {profile.userId}
-              </p>
-              {profile.statusMessage && (
-                <p className={styles.profileItem}>
-                  <strong>ステータスメッセージ:</strong> {profile.statusMessage}
-                </p>
-              )}
-            </div>
-            <button onClick={handleLogout} className={styles.button}>
-              ログアウト
-            </button>
-          </div>
+          <ProfileDisplay
+            profile={profile}
+            onEdit={handleEdit}
+            onLogout={handleLogout}
+          />
         ) : (
           <div className={styles.login}>
             <p className={styles.loginMessage}>

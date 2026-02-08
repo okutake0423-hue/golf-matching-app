@@ -1,15 +1,60 @@
 # ゴルフマッチングアプリ
 
-社内ゴルフマッチングアプリの雛形です。LIFF（LINE Front-end Framework）とFirebaseを使用して、LINEログイン機能とプロフィール表示機能を実装しています。
+社内向けのゴルフマッチングアプリです。LINEログイン（LIFF）と Firebase（Firestore）で、ユーザー認証とプロフィールの管理を行います。
+
+---
 
 ## 技術スタック
 
-- **Next.js 14** - Reactフレームワーク
-- **TypeScript** - 型安全性
-- **LIFF** - LINE Front-end Framework
-- **Firebase** - バックエンドサービス（認証など）
+| 項目 | 技術 |
+|------|------|
+| フロントエンド | Next.js 14（App Router）, React 18, TypeScript |
+| 認証・フロント | LIFF（LINE Front-end Framework） |
+| バックエンド | Firebase（Authentication, Firestore） |
+| デプロイ | Vercel 想定 |
 
-## セットアップ手順
+---
+
+## 機能一覧
+
+- **LINEログイン** … LIFF によるログイン・ログアウト
+- **プロフィール表示** … LINE の表示名・アイコンに加え、アプリ独自項目（会社名・平均スコア・プレイスタイル）を表示
+- **プロフィール編集** … 上記独自項目の入力・保存（Firestore の `users` コレクションに `userId` をドキュメントIDとして保存）
+- **Firebase 連携** … LIFF の ID トークン検証後、カスタムトークンで Firebase 認証（API Route で実装）
+
+---
+
+## プロジェクト構造
+
+```
+GolfMachingApp/
+├── app/
+│   ├── api/auth/line/     # LINE IDトークン → Firebase カスタムトークン API
+│   ├── profile/edit/      # プロフィール編集ページ
+│   ├── layout.tsx
+│   ├── page.tsx           # トップ（ログイン / プロフィール表示）
+│   └── globals.css
+├── components/
+│   ├── ProfileDisplay.tsx     # プロフィール表示
+│   └── ProfileEditForm.tsx   # プロフィール編集フォーム
+├── lib/
+│   ├── firebase.ts        # Firebase 初期化（Auth, Firestore）
+│   ├── firestore.ts       # Firestore 取得・保存（users）
+│   ├── liff.ts            # LIFF 初期化・ログイン・プロフィール取得
+│   └── firebase-auth.ts   # Firebase 認証ヘルパー
+├── types/
+│   └── profile.ts         # プロフィール・フォームの型定義
+├── .env.example           # 環境変数の例
+├── FIREBASE_SETUP.md      # Firebase 詳細設定
+├── BUILD_TROUBLESHOOTING.md  # ビルド時のトラブルシューティング
+├── next.config.js
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## セットアップ
 
 ### 1. 依存関係のインストール
 
@@ -17,508 +62,238 @@
 npm install
 ```
 
-### 2. LINE Developersでの設定
+### 2. 環境変数
 
-1. [LINE Developers](https://developers.line.biz/ja/)にアクセスしてログイン
-2. 新しいプロバイダーを作成（初回のみ）
-3. 新しいチャネルを作成（Messaging APIチャネル）
-4. LIFFアプリを作成：
-   - 「LIFF」タブを開く
-   - 「追加」ボタンをクリック
-   - アプリ名を入力
-   - サイズ: Full
-   - エンドポイントURL: `https://your-domain.com`（開発時は後で設定）
-   - スコープ: `profile`, `openid`
-5. LIFF IDをコピー
-
-### 3. Firebaseプロジェクトの設定
-
-1. [Firebase Console](https://console.firebase.google.com/)にアクセス
-2. 新しいプロジェクトを作成
-3. Webアプリを追加（`</>`アイコンをクリック）
-4. 設定情報をコピー：
-   - API Key
-   - Auth Domain
-   - Project ID
-   - Storage Bucket
-   - Messaging Sender ID
-   - App ID
-5. Authenticationを有効化：
-   - 左メニューから「Authentication」を選択
-   - 「始める」をクリック
-   - **注意**: Firebase Authenticationには標準でLINEプロバイダーが存在しません
-   - カスタムトークンを使用してLINE認証を実装します（後述）
-
-#### Firebase Admin SDKの設定（カスタムトークン生成用）
-
-Firebase Admin SDKを使用してカスタムトークンを生成する必要があります：
-
-1. Firebase Consoleで「プロジェクトの設定」→「サービスアカウント」を開く
-2. 「新しい秘密鍵の生成」をクリックしてJSONファイルをダウンロード
-3. このJSONファイルを`firebase-admin-key.json`としてプロジェクトルートに保存（`.gitignore`に追加済み）
-4. または、環境変数として設定（推奨）:
-   ```env
-   FIREBASE_ADMIN_PROJECT_ID=your_project_id
-   FIREBASE_ADMIN_CLIENT_EMAIL=your_service_account_email
-   FIREBASE_ADMIN_PRIVATE_KEY=your_private_key
-   ```
-
-### 4. 環境変数の設定
-
-`.env.example`を`.env.local`にコピーして、実際の値を設定してください：
+`.env.example` をコピーして `.env.local` を作成し、値を設定します。
 
 ```bash
-cp .env.example .env.local
+# Windows (PowerShell)
+Copy-Item .env.example .env.local
 ```
 
-`.env.local`ファイルを編集：
+| 変数名 | 説明 | 取得元 |
+|--------|------|--------|
+| `NEXT_PUBLIC_LIFF_ID` | LIFF アプリの ID | LINE Developers Console → チャネル → LIFF |
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase クライアント用（6種類） | Firebase Console → プロジェクトの設定 → 全般 |
+| `FIREBASE_ADMIN_PROJECT_ID` | Firebase プロジェクト ID | 上記と同じ |
+| `FIREBASE_ADMIN_CLIENT_EMAIL` | サービスアカウントのメール | Firebase → プロジェクトの設定 → サービスアカウント → 秘密鍵 JSON の `client_email` |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | 秘密鍵（改行は `\n`、全体を `"` で囲む） | 上記 JSON の `private_key` |
 
-```env
-# LINE LIFF設定
-NEXT_PUBLIC_LIFF_ID=your_liff_id_here
+### 3. LINE Developers（LIFF）
 
-# Firebase設定
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+1. [LINE Developers Console](https://developers.line.biz/console/) でプロバイダー・チャネル（Messaging API）を作成
+2. チャネルの **LIFF** タブで LIFF アプリを追加
+   - サイズ: Full
+   - スコープ: `profile`, `openid`
+   - エンドポイント URL: 開発時は `http://localhost:3000`、本番は Vercel の URL
+3. 発行された **LIFF ID** を `NEXT_PUBLIC_LIFF_ID` に設定
+
+### 4. Firebase
+
+1. [Firebase Console](https://console.firebase.google.com/) でプロジェクトを作成
+2. **Authentication** を有効化（LINE は標準にないため、本アプリでは LIFF の ID トークン → カスタムトークンで連携）
+3. **Firestore Database** の有効化（手順は下記「Firestore の有効化手順」を参照）
+4. **Web アプリ** を追加し、表示される設定値を `NEXT_PUBLIC_FIREBASE_*` に設定
+5. カスタムトークン発行用に **サービスアカウント** の秘密鍵を取得し、`FIREBASE_ADMIN_*` を設定
+
+詳細は **FIREBASE_SETUP.md** を参照してください。
+
+---
+
+## Firestore の有効化手順
+
+### 1. Firebase Console を開く
+
+1. [Firebase Console](https://console.firebase.google.com/) にログイン
+2. 対象のプロジェクトをクリック（まだの場合は「プロジェクトを追加」で作成）
+
+### 2. Firestore データベースを作成
+
+1. 左メニューで **「Firestore Database」** をクリック
+2. **「データベースを作成」** をクリック
+3. **セキュリティルールのモード** を選ぶ
+   - **本番モード** … 最初は全アクセス拒否。後からルールを書いて許可する（本番向け）
+   - **テストモード** … 約30日間は読み書き許可。開発中の動作確認向け
+4. **ロケーション**（リージョン）を選択  
+   例: `asia-northeast1`（東京）。一度選ぶと変更できないので注意
+5. **「有効にする」** をクリック
+6. 作成が終わると、空の Firestore が表示される
+
+### 3. ルールを設定する
+
+1. Firestore の画面で **「ルール」** タブを開く
+2. 次のいずれかを貼り付けて **「公開」** をクリック
+
+**開発・テスト用（誰でも読み書き可能）:**
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+  }
+}
 ```
 
-### 5. 開発サーバーの起動
+**本番向け（認証済みユーザーが自分のドキュメントのみ）:**
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+※ 本アプリでは LINE ログインのみのため、クライアントから直接 Firestore に書く場合は「開発用」ルールか、別途 Cloud Functions 等で認証を挟む運用を検討してください。
+
+### 4. 動作確認
+
+- アプリで LINE ログイン → プロフィール編集で「保存」すると、Firestore の **「データ」** タブに `users` コレクションができ、ドキュメントが追加されます。
+
+---
+
+## 開発・ビルド・デプロイ
+
+### 開発サーバー
 
 ```bash
 npm run dev
 ```
 
-ブラウザで [http://localhost:3000](http://localhost:3000) を開いて確認してください。
+ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。`.env.local` を変更した場合は、サーバーを再起動してください。
 
-### 6. LIFFアプリのエンドポイントURL設定
+### ビルド・本番起動
 
-#### 開発環境での設定
-
-開発環境では、`localhost`を使用できます：
-
-1. [LINE Developers Console](https://developers.line.biz/console/)にアクセス
-2. 作成したプロバイダーを選択
-3. チャネルを選択（Messaging APIチャネル）
-4. 「LIFF」タブをクリック
-5. 作成したLIFFアプリを選択（または新規作成）
-6. 「エンドポイントURL」に以下を設定：
-   ```
-   http://localhost:3000
-   ```
-   **注意**: 開発環境では`http://`でも動作しますが、本番環境では`https://`が必須です
-7. 「更新」ボタンをクリック
-
-#### 本番環境での設定
-
-アプリを本番環境にデプロイした後、エンドポイントURLを本番のURLに更新します：
-
-1. **デプロイ先の例**:
-   - Vercel: `https://your-app-name.vercel.app`
-   - Netlify: `https://your-app-name.netlify.app`
-   - Firebase Hosting: `https://your-project-id.web.app`
-   - 独自ドメイン: `https://your-domain.com`
-
-2. **LINE Developers Consoleでの設定**:
-   - [LINE Developers Console](https://developers.line.biz/console/)にアクセス
-   - プロバイダー → チャネル → 「LIFF」タブを開く
-   - LIFFアプリを選択
-   - 「エンドポイントURL」を本番環境のURLに変更：
-     ```
-     https://your-app-name.vercel.app
-     ```
-   - 「更新」ボタンをクリック
-
-3. **注意事項**:
-   - エンドポイントURLは**必ず`https://`で始まる必要があります**（本番環境）
-   - URLの末尾にスラッシュ（`/`）は付けないでください
-   - 変更後、LINEアプリ内でLIFFアプリを開き直す必要がある場合があります
-
-#### デプロイ例: Vercelへのデプロイ
-
-##### 方法A: GitHub経由でデプロイ（推奨）
-
-1. **GitHubリポジトリの準備**
-
-   **ステップ1: Gitがインストールされているか確認**
-   
-   コマンドプロンプト（CMD）またはPowerShellで以下を実行：
-   ```cmd
-   git --version
-   ```
-   
-   Gitがインストールされていない場合：
-   - [Git公式サイト](https://git-scm.com/download/win)からダウンロードしてインストール
-   - インストール後、コマンドプロンプトを再起動
-
-   **ステップ2: GitHubアカウントの作成**
-   
-   - [GitHub](https://github.com/)にアクセス
-   - 「Sign up」をクリックしてアカウントを作成
-   - メールアドレスの確認を完了
-
-   **ステップ3: GitHubでリポジトリを作成**
-   
-   1. GitHubにログイン
-   2. 右上の「+」ボタン → 「New repository」をクリック
-   3. リポジトリ名を入力（例: `golf-matching-app`）
-   4. 「Public」または「Private」を選択
-   5. 「Initialize this repository with a README」は**チェックを外す**（既にREADMEがあるため）
-   6. 「Create repository」をクリック
-   7. 作成されたページで、リポジトリのURLをコピー（例: `https://github.com/your-username/golf-matching-app.git`）
-
-   **ステップ4: ローカルでGitリポジトリを初期化**
-   
-   コマンドプロンプト（CMD）でプロジェクトディレクトリに移動：
-   ```cmd
-   cd C:\Users\takes\OneDrive\Desktop\TES_PGM\GolfMachingApp
-   ```
-   
-   Gitリポジトリを初期化：
-   ```cmd
-   git init
-   ```
-   → `.git`フォルダが作成されます
-
-   **ステップ5: Gitのユーザー情報を設定（初回のみ）**
-   
-   Gitでコミットするには、ユーザー名とメールアドレスを設定する必要があります。
-   
-   **グローバル設定（すべてのリポジトリで使用）:**
-   ```cmd
-   git config --global user.name "Your Name"
-   git config --global user.email "your.email@example.com"
-   ```
-   → `Your Name`を自分の名前（例: `Takes`）に置き換えてください
-   → `your.email@example.com`を自分のメールアドレス（GitHubに登録したメールアドレス推奨）に置き換えてください
-   → 例: `git config --global user.name "Takes"`、`git config --global user.email "takes@example.com"`
-   
-   **このリポジトリのみに設定する場合:**
-   ```cmd
-   git config user.name "Your Name"
-   git config user.email "your.email@example.com"
-   ```
-   → `--global`を付けないと、このリポジトリのみに設定されます
-   
-   **設定の確認:**
-   ```cmd
-   git config --global user.name
-   git config --global user.email
-   ```
-   → 設定した値が表示されればOKです
-
-   **ステップ6: ファイルをGitに追加**
-   
-   ```cmd
-   git add .
-   ```
-   → プロジェクト内のすべてのファイルがステージングエリアに追加されます
-   → `.gitignore`に記載されているファイル（`node_modules`、`.env.local`など）は除外されます
-
-   **ステップ7: 初回コミットを作成**
-   
-   ```cmd
-   git commit -m "Initial commit"
-   ```
-   → 変更をローカルのGitリポジトリに保存します
-   → `-m "Initial commit"`はコミットメッセージです
-
-   **ステップ8: GitHubリポジトリと接続**
-   
-   ```cmd
-   git remote add origin https://github.com/your-username/golf-matching-app.git
-   ```
-   → `your-username`を自分のGitHubユーザー名に置き換えてください
-   → 例: `https://github.com/takes/golf-matching-app.git`
-   → これでローカルのリポジトリとGitHubのリポジトリが接続されます
-
-   **ステップ9: ブランチ名をmainに変更（必要に応じて）**
-   
-   ```cmd
-   git branch -M main
-   ```
-   → ブランチ名を`main`に変更します（GitHubのデフォルトに合わせるため）
-
-   **ステップ10: GitHubにコードをアップロード**
-   
-   ```cmd
-   git push -u origin main
-   ```
-   → GitHubにログインを求められたら、GitHubのユーザー名とパスワード（またはPersonal Access Token）を入力
-   → 初回のみ`-u`オプションで、今後は`git push`だけでアップロードできるようになります
-
-   **各コマンドの意味:**
-   - `git init`: 現在のフォルダをGitリポジトリとして初期化
-   - `git add .`: すべてのファイルをGitの管理対象に追加
-   - `git commit`: 変更を記録（保存）
-   - `git remote add`: リモートリポジトリ（GitHub）のURLを登録
-   - `git push`: ローカルの変更をGitHubにアップロード
-
-   **トラブルシューティング:**
-   
-   - **認証エラーが出る場合**: GitHubのPersonal Access Tokenを使用する必要があります
-     1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-     2. 「Generate new token」をクリック
-     3. 「repo」にチェックを入れる
-     4. トークンを生成してコピー
-     5. `git push`時にパスワードの代わりにこのトークンを入力
-   
-   - **「remote origin already exists」エラー**: 既にリモートが設定されている場合
-     ```cmd
-     git remote remove origin
-     git remote add origin https://github.com/your-username/golf-matching-app.git
-     ```
-
-2. **Vercelアカウントの作成**
-   - [Vercel](https://vercel.com/)にアクセス
-   - 「Sign Up」をクリック
-   - GitHubアカウントでサインアップ（推奨）またはメールアドレスで登録
-
-3. **プロジェクトのインポート**
-   - Vercelダッシュボードで「Add New...」→「Project」をクリック
-   - 「Import Git Repository」でGitHubリポジトリを選択
-   - リポジトリが見つからない場合は「Adjust GitHub App Permissions」で権限を設定
-
-4. **プロジェクト設定**
-   - **Framework Preset**: Next.js（自動検出されるはず）
-   - **Root Directory**: `./`（デフォルト）
-   - **Build Command**: `npm run build`（自動設定）
-   - **Output Directory**: `.next`（自動設定）
-   - **Install Command**: `npm install`（自動設定）
-
-5. **環境変数の設定**
-   - 「Environment Variables」セクションを開く
-   - `.env.local`の内容を1つずつ追加：
-     
-     **LINE LIFF設定:**
-     - `NEXT_PUBLIC_LIFF_ID` = `your_liff_id_here`
-     
-     **Firebase設定（クライアントサイド用）:**
-     - `NEXT_PUBLIC_FIREBASE_API_KEY` = `your_firebase_api_key`
-     - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` = `your_project_id.firebaseapp.com`
-     - `NEXT_PUBLIC_FIREBASE_PROJECT_ID` = `your_project_id`
-     - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` = `your_project_id.appspot.com`
-     - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` = `your_messaging_sender_id`
-     - `NEXT_PUBLIC_FIREBASE_APP_ID` = `your_app_id`
-     
-     **Firebase Admin SDK設定（サーバーサイド用）:**
-     - `FIREBASE_ADMIN_PROJECT_ID` = `your_project_id`
-     - `FIREBASE_ADMIN_CLIENT_EMAIL` = `your_service_account_email@...`
-     - `FIREBASE_ADMIN_PRIVATE_KEY` = `-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n`
-     - **注意**: `FIREBASE_ADMIN_PRIVATE_KEY`は改行文字（`\n`）を含むため、そのまま貼り付けてください
-   
-   - 各環境変数の「Environment」で「Production」「Preview」「Development」を選択
-   - 「Save」をクリック
-
-6. **デプロイの実行**
-   - 「Deploy」ボタンをクリック
-   - ビルドが完了するまで待機（通常1-3分）
-   - 「Congratulations!」画面が表示されたら成功
-
-7. **デプロイURLの確認**
-   - デプロイ完了後、以下のようなURLが表示されます：
-     ```
-     https://golf-matching-app-xxxxx.vercel.app
-     ```
-   - このURLをコピー
-
-8. **LINE Developers ConsoleでエンドポイントURLを更新**
-   - [LINE Developers Console](https://developers.line.biz/console/)にアクセス
-   - プロバイダー → チャネル → 「LIFF」タブ
-   - LIFFアプリを選択
-   - 「エンドポイントURL」をVercelのURLに変更：
-     ```
-     https://golf-matching-app-xxxxx.vercel.app
-     ```
-   - 「更新」ボタンをクリック
-
-##### 方法B: Vercel CLIでデプロイ
-
-1. **Vercel CLIのインストール**
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Vercelにログイン**
-   ```bash
-   vercel login
-   ```
-   - ブラウザが開くので、Vercelアカウントでログイン
-
-3. **プロジェクトディレクトリでデプロイ**
-   ```bash
-   cd C:\Users\takes\OneDrive\Desktop\TES_PGM\GolfMachingApp
-   vercel
-   ```
-   
-4. **対話形式の設定**
-   - 「Set up and deploy?」→ `Y`
-   - 「Which scope?」→ アカウントを選択
-   - 「Link to existing project?」→ `N`（新規プロジェクトの場合）
-   - 「What's your project's name?」→ `golf-matching-app`（任意）
-   - 「In which directory is your code located?」→ `./`（Enter）
-   - 「Want to override the settings?」→ `N`
-
-5. **環境変数の設定**
-   ```bash
-   vercel env add NEXT_PUBLIC_LIFF_ID
-   vercel env add NEXT_PUBLIC_FIREBASE_API_KEY
-   # ... 他の環境変数も同様に追加
-   ```
-   
-   または、Vercelダッシュボードで環境変数を設定（方法Aの手順5を参照）
-
-6. **本番環境へのデプロイ**
-   ```bash
-   vercel --prod
-   ```
-
-7. **デプロイURLの確認とLINE Developers Consoleの更新**
-   - デプロイ完了後、表示されたURLをコピー
-   - LINE Developers ConsoleでエンドポイントURLを更新（方法Aの手順8を参照）
-
-##### デプロイ後の確認
-
-1. **アプリの動作確認**
-   - VercelのURLにブラウザでアクセス
-   - アプリが正常に表示されるか確認
-
-2. **LINEアプリ内での確認**
-   - LINEアプリを開く
-   - LIFFアプリを起動（LINE内のリンクやボタンから）
-   - ログイン機能が正常に動作するか確認
-
-##### トラブルシューティング
-
-- **環境変数が読み込まれない**: Vercelダッシュボードで環境変数が正しく設定されているか確認
-- **ビルドエラー**: Vercelのビルドログを確認し、エラーメッセージを参照
-- **Firebase Admin SDKエラー**: `FIREBASE_ADMIN_PRIVATE_KEY`の改行文字（`\n`）が正しく設定されているか確認
-
-## プロジェクト構造
-
-```
-.
-├── app/                      # Next.js App Router
-│   ├── api/                  # API Routes
-│   │   └── auth/
-│   │       └── line/
-│   │           └── route.ts  # LINE認証API（カスタムトークン生成）
-│   ├── layout.tsx            # ルートレイアウト
-│   ├── page.tsx              # ホームページ（プロフィール表示）
-│   ├── page.module.css       # ページスタイル
-│   └── globals.css           # グローバルスタイル
-├── lib/                      # ユーティリティ関数
-│   ├── firebase.ts           # Firebase設定（クライアントサイド）
-│   ├── firebase-auth.ts      # Firebase認証ヘルパー関数
-│   └── liff.ts               # LIFF設定と関数
-├── .env.example              # 環境変数のテンプレート
-├── FIREBASE_SETUP.md         # Firebase設定ガイド
-├── next.config.js            # Next.js設定
-├── package.json              # 依存関係
-├── tsconfig.json             # TypeScript設定
-└── README.md                 # このファイル
+```bash
+npm run build
+npm run start
 ```
 
-## 機能
+### デプロイ（Vercel）— 修正したプログラムのデプロイ手順
 
-- ✅ LINEログイン機能
-- ✅ ユーザープロフィール表示（表示名、ユーザーID、プロフィール画像、ステータスメッセージ）
-- ✅ ログアウト機能
+修正したプログラムを本番に反映する手順です。
 
-## 次のステップ
+---
 
-- Firebase Authenticationとの連携（LIFFのIDトークンをFirebaseで検証）
-- ユーザーデータのFirestoreへの保存
-- ゴルフマッチング機能の実装
+#### ステップ1: ローカルでコミットして GitHub にプッシュ
 
-## FirebaseとLINE認証の連携について
+1. プロジェクトフォルダでコマンドプロンプト（または PowerShell）を開く
+2. 変更をコミットしてプッシュする
 
-Firebase Authenticationには標準でLINEプロバイダーが存在しないため、以下の方法で連携します：
+```cmd
+cd C:\Users\takes\OneDrive\Desktop\TES_PGM\GolfMachingApp
 
-1. **LIFFでLINEログイン**: ユーザーがLIFF経由でLINEにログイン
-2. **IDトークン取得**: LIFFからIDトークンを取得
-3. **カスタムトークン生成**: サーバーサイド（API Route）でLIFFのIDトークンを検証し、Firebaseのカスタムトークンを生成
-4. **Firebase認証**: カスタムトークンを使ってFirebaseにログイン
-
-### Firebase Admin SDKの実装
-
-`app/api/auth/line/route.ts`を更新して、Firebase Admin SDKを使用してください：
-
-```typescript
-import admin from 'firebase-admin';
-
-// Firebase Admin SDKの初期化
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
-}
-
-// カスタムトークンの生成
-const customToken = await admin.auth().createCustomToken(lineProfile.sub);
+git add .
+git status
+git commit -m "プロフィール編集・Firestore連携など修正"
+git push origin main
 ```
 
-または、サービスアカウントJSONファイルを使用する場合：
+- ブランチ名が `main` でない場合は `git push origin ブランチ名` に読み替える
+- 初回のみ `git remote add origin https://github.com/ユーザー名/リポジトリ名.git` が必要な場合あり
 
-```typescript
-import admin from 'firebase-admin';
-import serviceAccount from '@/firebase-admin-key.json';
+---
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  });
-}
-```
+#### ステップ2: Vercel でデプロイ（初回のみ：プロジェクト作成）
+
+1. [Vercel](https://vercel.com/) にログイン
+2. **Add New…** → **Project**
+3. **Import Git Repository** で GitHub のリポジトリを選択
+4. **Root Directory** はそのまま（`./`）
+5. **Environment Variables** で以下を追加（Key / Value を入力して **Add**）
+   - `NEXT_PUBLIC_LIFF_ID`
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+   - `FIREBASE_ADMIN_PROJECT_ID`
+   - `FIREBASE_ADMIN_CLIENT_EMAIL`
+   - `FIREBASE_ADMIN_PRIVATE_KEY`
+6. **Deploy** をクリック
+
+---
+
+#### ステップ2': すでに Vercel プロジェクトがある場合（修正の再デプロイ）
+
+- **Git と連携している場合**  
+  `git push origin main` すると、Vercel が自動で新しいデプロイを開始します。  
+  Vercel ダッシュボードの **Deployments** で進行状況を確認できます。
+
+- **手動で再デプロイする場合**
+  1. Vercel ダッシュボードで対象プロジェクトを開く
+  2. **Deployments** タブを開く
+  3. 一番上のデプロイの **⋯**（3点メニュー）→ **Redeploy** をクリック
+  4. **Redeploy** で確定
+
+- **環境変数を変えた場合**  
+  **Settings** → **Environment Variables** で編集・追加したあと、上記の **Redeploy** を実行すると反映されます。
+
+---
+
+#### ステップ3: デプロイ完了後の確認
+
+1. Vercel の **Deployments** で **Ready** になっていることを確認
+2. 表示された URL（例: `https://golf-matching-app-xxx.vercel.app`）でアプリを開く
+3. LINE ログイン → プロフィール表示・編集ができるか確認
+
+---
+
+#### ステップ4: LIFF のエンドポイント URL を本番 URL に合わせる
+
+1. [LINE Developers Console](https://developers.line.biz/console/) にログイン
+2. 対象チャネル → **LIFF** タブ → 使用する LIFF アプリを選択
+3. **エンドポイント URL** を Vercel の URL に変更  
+   例: `https://golf-matching-app-xxx.vercel.app`（末尾の `/` は付けない）
+4. **更新** をクリック
+
+---
+
+#### まとめ（修正後のデプロイの流れ）
+
+| 状況 | やること |
+|------|----------|
+| コードを直した | `git add .` → `git commit -m "..."` → `git push origin main`（Vercel が自動デプロイ） |
+| 環境変数を変えた | Vercel の **Settings → Environment Variables** で編集 → **Deployments** から **Redeploy** |
+| 初めてデプロイする | 上記ステップ2の「初回のみ」の手順で Vercel プロジェクトを作成 |
+
+ビルドエラーが出る場合は **BUILD_TROUBLESHOOTING.md** を参照してください。
+
+---
+
+## 主な画面とデータの流れ
+
+1. **トップ（`/`）**  
+   - 未ログイン: 「LINEでログイン」ボタン  
+   - ログイン後: LINE プロフィール ＋ Firestore の会社名・平均スコア・プレイスタイルを表示。「編集」で `/profile/edit` へ
+2. **プロフィール編集（`/profile/edit`）**  
+   - 会社名・平均スコア・プレイスタイルを入力して「保存」  
+   - Firestore の `users` コレクションに、ドキュメント ID = LINE の `userId` で保存・更新
+
+---
 
 ## 注意事項
 
-- `.env.local`ファイルはGitにコミットしないでください（`.gitignore`に含まれています）
-- `firebase-admin-key.json`もGitにコミットしないでください
-- LIFFアプリはHTTPS環境で動作する必要があります（開発環境では`localhost`も使用可能）
-- Firebase Admin SDKはサーバーサイドでのみ動作します（クライアントサイドでは使用できません）
+- `.env.local` および `firebase-admin-key.json` は Git にコミットしないでください（`.gitignore` に含まれています）
+- 本番の Firestore ルールは、認証済みユーザーのみ読み書きできるようにすることを推奨します
+- LIFF のエンドポイント URL は本番環境では `https://` が必須です
 
-## 非推奨パッケージの警告について
+---
 
-`npm install`やビルド時に非推奨（deprecated）パッケージの警告が表示される場合があります：
+## 関連ドキュメント
 
-- `eslint@8.57.1` - サポート終了（Next.js 14はeslint 8と互換性があります）
-- `rimraf@3.0.2` - 古いバージョン
-- `glob` - セキュリティ脆弱性が修正された新しいバージョンが利用可能
+- **FIREBASE_SETUP.md** … Firebase / サービスアカウントの詳細設定
+- **BUILD_TROUBLESHOOTING.md** … `npm run build` や Vercel ビルドでよくあるエラーと対処
 
-**これらは警告であり、ビルドには影響しません。** 現時点では無視しても問題ありませんが、将来的に更新を検討してください。
+---
 
-### 警告を解消したい場合（オプション）
+## ライセンス
 
-将来的にパッケージを更新する場合：
-
-```bash
-# 依存関係を更新
-npm update
-
-# または、個別に更新
-npm install eslint@latest --save-dev
-```
-
-**注意**: ESLint 9への更新は大きな変更があるため、Next.jsのバージョンとの互換性を確認してから更新してください。
-
-## トラブルシューティング
-
-### LIFFの初期化に失敗する場合
-
-- `NEXT_PUBLIC_LIFF_ID`が正しく設定されているか確認
-- LIFFアプリがLINE Developersで正しく作成されているか確認
-- ブラウザのコンソールでエラーメッセージを確認
-
-### Firebase接続エラーが発生する場合
-
-- Firebase設定値が正しく設定されているか確認
-- FirebaseプロジェクトでAuthenticationが有効化されているか確認
-- ネットワーク接続を確認
+プライベート利用を想定しています。

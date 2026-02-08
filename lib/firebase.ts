@@ -1,5 +1,6 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,5 +21,8 @@ if (getApps().length === 0) {
 
 // Authインスタンスの取得
 export const auth: Auth = getAuth(app);
+
+// Firestoreインスタンスの取得
+export const db: Firestore = getFirestore(app);
 
 export default app;
