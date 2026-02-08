@@ -15,7 +15,7 @@
     "@line/liff": "^2.24.0",
     "firebase": "^10.12.2",
     "firebase-admin": "^12.4.0",
-    "react-calendar": "^4.9.0"
+    "react-calendar": "^4.8.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
