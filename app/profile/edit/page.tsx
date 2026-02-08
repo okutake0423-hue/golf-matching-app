@@ -96,11 +96,14 @@ export default function ProfileEditPage() {
           onSave={handleSave}
           onCancel={handleCancel}
         />
-        <p className={styles.back}>
+        <div className={styles.navLinks}>
+          <Link href="/schedules" className={styles.buttonLink}>
+            予定を見る
+          </Link>
           <Link href="/" className={styles.link}>
             ← トップへ戻る
           </Link>
-        </p>
+        </div>
       </main>
     </div>
   );
