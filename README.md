@@ -20,6 +20,7 @@
 - **LINEログイン** … LIFF によるログイン・ログアウト
 - **プロフィール表示** … LINE の表示名・アイコンに加え、アプリ独自項目（会社名・平均スコア・プレイスタイル）を表示
 - **プロフィール編集** … 上記独自項目の入力・保存（Firestore の `users` コレクションに `userId` をドキュメントIDとして保存）
+- **ゴルフ予定** … 募集モード（日時・コース・プレーフィー・募集人数）と希望モード（希望日・コース/地域・上限プレーフィー）の投稿、カレンダー表示、月別・日別一覧（Firestore の `schedules` コレクション）
 - **Firebase 連携** … LIFF の ID トークン検証後、カスタムトークンで Firebase 認証（API Route で実装）
 
 ---
@@ -133,6 +134,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if true;
     }
+    match /schedules/{scheduleId} {
+      allow read, write: if true;
+    }
   }
 }
 ```
@@ -152,9 +156,14 @@ service cloud.firestore {
 
 ※ 本アプリでは LINE ログインのみのため、クライアントから直接 Firestore に書く場合は「開発用」ルールか、別途 Cloud Functions 等で認証を挟む運用を検討してください。
 
-### 4. 動作確認
+### 4. 予定（schedules）用の複合インデックス（任意）
+
+月別で予定を取得するクエリを使う場合、初回実行時に Firestore がコンソールでインデックス作成を促すことがあります。その場合は表示されたリンクから **「インデックスを作成」** をクリックしてください。手動で作成する場合: Firestore → **「インデックス」** タブ → 複合インデックスを追加し、コレクション ID `schedules`、フィールド `monthKey`（昇順）、`dateStr`（昇順）、`createdAt`（昇順）を指定します。
+
+### 5. 動作確認
 
 - アプリで LINE ログイン → プロフィール編集で「保存」すると、Firestore の **「データ」** タブに `users` コレクションができ、ドキュメントが追加されます。
+- **予定**（`/schedules`）で「募集する」「希望を出す」から投稿すると、`schedules` コレクションにドキュメントが追加されます。
 
 ---
 
@@ -330,10 +339,15 @@ git push origin main
 
 1. **トップ（`/`）**  
    - 未ログイン: 「LINEでログイン」ボタン  
-   - ログイン後: LINE プロフィール ＋ Firestore の会社名・平均スコア・プレイスタイルを表示。「編集」で `/profile/edit` へ
+   - ログイン後: LINE プロフィール ＋ Firestore の会社名・平均スコア・プレイスタイルを表示。「編集」で `/profile/edit` へ、「予定を見る」で `/schedules` へ
 2. **プロフィール編集（`/profile/edit`）**  
    - 会社名・平均スコア・プレイスタイルを入力して「保存」  
    - Firestore の `users` コレクションに、ドキュメント ID = LINE の `userId` で保存・更新
+3. **ゴルフ予定（`/schedules`）**  
+   - カレンダーで月・日を選択し、予定がある日にドット表示  
+   - 「募集する」: 日時・コース・プレーフィー・募集人数・参加者を投稿（種類 `RECRUIT`）  
+   - 「希望を出す」: 希望日・希望コース/地域・上限プレーフィーを投稿（種類 `WISH`）  
+   - Firestore の `schedules` コレクションに保存
 
 ---
 
@@ -379,6 +393,33 @@ git push origin main
 - **更新** をクリック
 
 画面上に表示されるメッセージ（「NEXT_PUBLIC_LIFF_ID が…」「エンドポイントURL が…」など）に従って上記を確認してください。
+
+---
+
+### `Missing or insufficient permissions`（Firestore）
+
+**原因**: Firestore のセキュリティルールで、読み書きが拒否されています。このアプリは LINE ログインのみで、Firebase Auth にログインしていないため、`request.auth != null` のルールだと常に拒否されます。
+
+**対処**:
+
+1. [Firebase Console](https://console.firebase.google.com/) → 対象プロジェクト → **Firestore Database**
+2. **「ルール」** タブを開く
+3. 次のルールに書き換え、**「公開」** をクリック
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+これで `users` コレクションへの読み書きが許可され、プロフィールの表示・保存が動きます。
+
+※ 本番でより厳しくする場合は、Cloud Functions などサーバー側で Firestore を操作する構成に変更する必要があります。
 
 ---
 

@@ -8,9 +8,10 @@ type Props = {
   profile: UserProfileDisplay;
   onEdit?: () => void;
   onLogout?: () => void;
+  onSchedules?: () => void;
 };
 
-export function ProfileDisplay({ profile, onEdit, onLogout }: Props) {
+export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props) {
   const playStyleLabel =
     (PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
       profile.playStyle) ||
@@ -73,6 +74,11 @@ export function ProfileDisplay({ profile, onEdit, onLogout }: Props) {
       </section>
 
       <div className={styles.actions}>
+        {onSchedules && (
+          <button type="button" onClick={onSchedules} className={styles.buttonEdit}>
+            予定を見る
+          </button>
+        )}
         {onEdit && (
           <button type="button" onClick={onEdit} className={styles.buttonEdit}>
             編集

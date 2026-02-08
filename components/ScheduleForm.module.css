@@ -1,0 +1,86 @@
+.form {
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.modeSwitch {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modeSwitch button {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modeSwitch button.modeActive {
+  background: #06c755;
+  color: #fff;
+}
+
+.error {
+  background: #fee;
+  color: #c33;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.field input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.submit {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: #06c755;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: #05b048;
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

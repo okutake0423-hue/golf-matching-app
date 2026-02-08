@@ -1,0 +1,71 @@
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  margin-bottom: 12px;
+}
+
+.card {
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  position: relative;
+  padding-top: 28px;
+}
+
+.badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  background: #06c755;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.badgeWish {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  background: #2196f3;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dateTime {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: #666;
+}
+
+.course {
+  margin: 0 0 6px;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.detail {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.participants {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #666;
+}

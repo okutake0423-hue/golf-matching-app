@@ -86,6 +86,10 @@ export default function Home() {
     router.push('/profile/edit');
   };
 
+  const handleSchedules = () => {
+    router.push('/schedules');
+  };
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -121,6 +125,7 @@ export default function Home() {
             profile={profile}
             onEdit={handleEdit}
             onLogout={handleLogout}
+            onSchedules={handleSchedules}
           />
         ) : (
           <div className={styles.login}>

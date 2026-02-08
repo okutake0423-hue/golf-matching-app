@@ -1,0 +1,33 @@
+.wrapper {
+  margin: 0 auto;
+  max-width: 360px;
+}
+
+.calendar {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 2px auto 0;
+  background: #06c755;
+  border-radius: 50%;
+}
+
+:global(.react-calendar__tile--now) {
+  background: #e8f5e9;
+}
+
+:global(.react-calendar__tile--active) {
+  background: #06c755 !important;
+  color: #fff;
+}
+
+:global(.react-calendar__tile--active .dot) {
+  background: #fff;
+}
