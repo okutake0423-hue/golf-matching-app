@@ -108,13 +108,22 @@ export default function SchedulesPage() {
     );
   }
 
+  const scrollToForm = useCallback(() => {
+    document.getElementById('schedule-form')?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
         <h1 className={styles.title}>ゴルフ予定</h1>
-        <p className={styles.back}>
-          <Link href="/">← トップへ</Link>
-        </p>
+        <div className={styles.headerActions}>
+          <p className={styles.back}>
+            <Link href="/">← トップへ</Link>
+          </p>
+          <button type="button" onClick={scrollToForm} className={styles.buttonInput}>
+            スケジュールを入力
+          </button>
+        </div>
 
         {error && <div className={styles.error}>{error}</div>}
 
@@ -140,7 +149,7 @@ export default function SchedulesPage() {
           )}
         </section>
 
-        <section className={styles.section}>
+        <section id="schedule-form" className={styles.section}>
           <h2 className={styles.sectionTitle}>予定を投稿</h2>
           <ScheduleForm
             posterId={userId}

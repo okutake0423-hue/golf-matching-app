@@ -20,9 +20,32 @@
   color: #333;
 }
 
-.back {
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 20px;
+}
+
+.back {
+  margin: 0;
   font-size: 14px;
+}
+
+.buttonInput {
+  padding: 10px 20px;
+  background: #06c755;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.buttonInput:hover {
+  background: #05b048;
 }
 
 .back a {
