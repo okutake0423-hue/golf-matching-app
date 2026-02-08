@@ -268,6 +268,64 @@ git push origin main
 
 ---
 
+## 修正が反映されないときの確認手順
+
+修正したプログラムが本番（Vercel）やローカルに反映されない場合は、次を順に確認してください。
+
+### 1. ローカルで修正が保存されているか
+
+- 該当ファイルを開き、変更が保存されているか確認（未保存の場合は Ctrl+S）
+- 開発サーバーを再起動: ターミナルで `Ctrl+C` → `npm run dev`
+
+### 2. Git にコミット・プッシュしているか
+
+```cmd
+cd C:\Users\takes\OneDrive\Desktop\TES_PGM\GolfMachingApp
+
+git status
+```
+
+- **Changes not staged** や **Untracked files** が出る → まだコミットしていない
+
+```cmd
+git add .
+git commit -m "修正内容の説明"
+git push origin main
+```
+
+- `git push` でエラーになる場合は、リモートのブランチ名（`main` か `master` か）を確認して `git push origin ブランチ名` を実行
+
+### 3. Vercel でデプロイが成功しているか
+
+1. [Vercel ダッシュボード](https://vercel.com/dashboard) で対象プロジェクトを開く
+2. **Deployments** タブを開く
+3. 一番上のデプロイの **Status** が **Ready**（緑）か確認
+   - **Building** のまま止まっている / **Error** になっている → そのデプロイをクリックして **Build Logs** でエラー内容を確認
+4. **Ready** のデプロイの **Commit** が、今プッシュしたコミット（メッセージやハッシュ）と一致しているか確認  
+   - 古いコミットのまま → 最新の `git push` が Vercel に届いていない、または別ブランチがデプロイされている可能性あり
+
+### 4. ブラウザのキャッシュ
+
+- **ハードリロード**: `Ctrl + Shift + R`（Windows）または `Cmd + Shift + R`（Mac）
+- または **シークレットウィンドウ**（プライベートブラウジング）で同じ URL を開いて表示を確認
+
+### 5. 開いている URL が正しいか
+
+- Vercel の **Domains** や **Deployments** に表示されている **本番 URL** を開いているか確認
+- プレビュー用の URL と本番 URL が違う場合があるので、本番用の URL で開き直す
+
+### 6. LIFF から開いている場合
+
+- LINE Developers の LIFF の **エンドポイント URL** が、反映させたい Vercel の URL と一致しているか確認
+- 一致していないと、古いデプロイや別の URL が開かれることがあります
+
+### 7. 環境変数を変えた場合
+
+- 環境変数を変更したあとは、**Redeploy** しないと反映されません  
+  **Deployments** → 最新の **⋯** → **Redeploy** を実行
+
+---
+
 ## 主な画面とデータの流れ
 
 1. **トップ（`/`）**  
