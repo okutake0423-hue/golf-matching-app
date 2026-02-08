@@ -72,8 +72,8 @@ export function ScheduleCalendar({
     : undefined;
 
   const handleActiveStartDateChange = useCallback(
-    (args: { activeStartDate: Date }) => {
-      if (!onActiveMonthChange) return;
+    (args: { activeStartDate: Date | null }) => {
+      if (!onActiveMonthChange || args.activeStartDate == null) return;
       const d = args.activeStartDate;
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
