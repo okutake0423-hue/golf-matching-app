@@ -40,6 +40,7 @@
   text-align: left;
   max-width: 520px;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .error code {

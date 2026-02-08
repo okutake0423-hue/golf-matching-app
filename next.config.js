@@ -19,7 +19,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com https://*.line.me https://*.line-apps.com wss://*.firebaseio.com",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com https://liff.line.me https://api.line.me https://*.line.me https://*.line-apps.com wss://*.firebaseio.com",
               "frame-src 'self' https://*.line.me",
             ].join('; '),
           },

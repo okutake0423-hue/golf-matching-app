@@ -48,6 +48,13 @@ export const initLiff = async (): Promise<InitLiffResult> => {
           'LIFF のエンドポイントURL がこのアプリのURLと一致していません。LINE Developers Console の LIFF 設定で、エンドポイントURL をこのアプリのURL（例: https://xxx.vercel.app）に変更してください。',
       };
     }
+    if (/failed to fetch|network|networkerror/i.test(message)) {
+      return {
+        ok: false,
+        reason:
+          'LIFF への接続に失敗しました（Failed to fetch）。\n\n確認してください：\n・このページは LINE アプリの「LIFF を開く」から開いていますか？（ブラウザで URL を直接開くと失敗します）\n・LINE Developers Console → LIFF の「エンドポイント URL」が、今開いているアドレスと完全に一致していますか？（https:// で始まり、末尾に / を付けない）\n・Wi‑Fi・モバイル回線が有効で、LINE のサーバーに届く環境ですか？',
+      };
+    }
     return {
       ok: false,
       reason: `LIFFの初期化に失敗しました: ${message}`,

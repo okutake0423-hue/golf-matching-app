@@ -403,6 +403,16 @@ git push origin main
   （`http://localhost:3000` のままにしていると、本番で開いたときに初期化に失敗します）
 - **更新** をクリック
 
+**3. 「Failed to fetch」と出る場合**
+
+LIFF が LINE のサーバーに接続できていません。次を確認してください。
+
+- **LINE から開く**: 必ず **LINE アプリ内**で、LIFF のリンク（「LIFF を開く」など）から開いてください。Chrome などで URL を直接入力して開くと失敗します。
+- **エンドポイント URL の一致**: 今開いているアドレスバーの URL と、LINE Developers Console の LIFF の「エンドポイント URL」が **完全に一致**しているか確認してください。
+  - 一致させる例: 開いているのが `https://myapp.vercel.app` なら、エンドポイント URL も `https://myapp.vercel.app`（`https://` で始め、末尾に `/` を付けない）
+- **HTTPS**: 本番では必ず `https://` の URL を設定してください。
+- **ネットワーク**: Wi‑Fi やモバイル回線が有効か、社内ネットワークやファイアウォールで LINE のドメイン（`liff.line.me` など）がブロックされていないか確認してください。
+
 画面上に表示されるメッセージ（「NEXT_PUBLIC_LIFF_ID が…」「エンドポイントURL が…」など）に従って上記を確認してください。
 
 ---
