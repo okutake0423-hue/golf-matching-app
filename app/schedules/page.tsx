@@ -2,14 +2,22 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
 import { getSchedulesByMonth, addSchedule } from '@/lib/firestore-schedules';
-import { ScheduleCalendar } from '@/components/ScheduleCalendar';
 import { ScheduleList } from '@/components/ScheduleList';
 import { ScheduleForm } from '@/components/ScheduleForm';
 import type { ScheduleDoc, ScheduleFormData } from '@/types/schedule';
 import { getMonthKey } from '@/types/schedule';
 import styles from './schedules.module.css';
+
+const ScheduleCalendar = dynamic(
+  () =>
+    import('@/components/ScheduleCalendar').then((m) => ({
+      default: m.ScheduleCalendar,
+    })),
+  { ssr: false, loading: () => <div className={styles.loading}>カレンダー読み込み中...</div> }
+);
 
 function toDateStr(d: Date): string {
   const y = d.getFullYear();
@@ -49,18 +57,19 @@ export default function SchedulesPage() {
 
   useEffect(() => {
     const init = async () => {
-      const ok = await initLiff();
-      if (!ok.ok || !isLoggedIn()) {
-        setReady(true);
-        return;
-      }
       try {
+        const result = await initLiff();
+        if (!result.ok || !isLoggedIn()) {
+          setReady(true);
+          return;
+        }
         const profile = await getProfile();
-        setUserId(profile.userId);
+        setUserId(profile?.userId ?? null);
       } catch (e) {
-        console.error(e);
+        console.error('Schedules init error:', e);
+      } finally {
+        setReady(true);
       }
-      setReady(true);
     };
     init();
   }, []);

@@ -25,8 +25,12 @@ function toDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function toMonthStart(monthKey: string): Date {
-  const [y, m] = monthKey.split('-').map(Number);
+function toMonthStart(monthKey: string): Date | undefined {
+  if (!monthKey || typeof monthKey !== 'string') return undefined;
+  const parts = monthKey.split('-').map(Number);
+  const y = parts[0];
+  const m = parts[1];
+  if (Number.isNaN(y) || Number.isNaN(m) || m < 1 || m > 12) return undefined;
   return new Date(y, m - 1, 1);
 }
 
@@ -39,7 +43,10 @@ export function ScheduleCalendar({
 }: Props) {
   const dateStrSet = useCallback(() => {
     const set = new Set<string>();
-    schedules.forEach((s) => set.add(s.dateStr));
+    const list = Array.isArray(schedules) ? schedules : [];
+    list.forEach((s) => {
+      if (s?.dateStr) set.add(s.dateStr);
+    });
     return set;
   }, [schedules])();
 
@@ -68,7 +75,7 @@ export function ScheduleCalendar({
   );
 
   const activeStartDate = activeMonthKey
-    ? toMonthStart(activeMonthKey)
+    ? toMonthStart(activeMonthKey) ?? undefined
     : undefined;
 
   const handleActiveStartDateChange = useCallback(
@@ -90,7 +97,9 @@ export function ScheduleCalendar({
         activeStartDate={activeStartDate}
         onActiveStartDateChange={handleActiveStartDateChange}
         formatShortWeekday={(_, date) =>
-          ['日', '月', '火', '水', '木', '金', '土'][date.getDay()]
+          ['日', '月', '火', '水', '木', '金', '土'][
+            date && typeof date.getDay === 'function' ? date.getDay() : 0
+          ]
         }
         tileContent={tileContent}
         className={styles.calendar}
