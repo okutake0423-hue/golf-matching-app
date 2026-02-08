@@ -19,15 +19,15 @@
   border-radius: 50%;
 }
 
-:global(.react-calendar__tile--now) {
+.wrapper :global(.react-calendar__tile--now) {
   background: #e8f5e9;
 }
 
-:global(.react-calendar__tile--active) {
+.wrapper :global(.react-calendar__tile--active) {
   background: #06c755 !important;
   color: #fff;
 }
 
-:global(.react-calendar__tile--active .dot) {
+.wrapper :global(.react-calendar__tile--active) .dot {
   background: #fff;
 }
