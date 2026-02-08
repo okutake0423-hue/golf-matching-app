@@ -17,9 +17,9 @@ export const initLiff = async (): Promise<boolean> => {
     return false;
   }
 
-  const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-  if (!liffId) {
-    console.error('LIFF ID is not set');
+  const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim();
+  if (!liffId || liffId === 'your_liff_id_here') {
+    console.error('LIFF ID is not set. Set NEXT_PUBLIC_LIFF_ID in .env.local (local) or in Vercel Environment Variables (production).');
     return false;
   }
 

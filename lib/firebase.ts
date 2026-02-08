@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, signInWithCustomToken, User } from 'firebase/auth';
+import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,36 +20,5 @@ if (getApps().length === 0) {
 
 // Authインスタンスの取得
 export const auth: Auth = getAuth(app);
-
-/**
- * LIFFのIDトークンを使ってFirebaseにログインします
- * バックエンドAPIでカスタムトークンを取得してからFirebaseにログインします
- */
-export const signInWithLineToken = async (lineIdToken: string): Promise<User> => {
-  try {
-    // バックエンドAPIでカスタムトークンを取得
-    const response = await fetch('/api/auth/line', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ idToken: lineIdToken }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'カスタムトークンの取得に失敗しました');
-    }
-
-    const { customToken } = await response.json();
-
-    // カスタムトークンでFirebaseにログイン
-    const userCredential = await signInWithCustomToken(auth, customToken);
-    return userCredential.user;
-  } catch (error) {
-    console.error('Firebase sign-in error:', error);
-    throw error;
-  }
-};
 
 export default app;

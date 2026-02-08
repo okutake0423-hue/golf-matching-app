@@ -69,7 +69,15 @@ export default function Home() {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          LIFFの初期化に失敗しました。環境変数を確認してください。
+          <strong>LIFFの初期化に失敗しました。</strong>
+          <br /><br />
+          環境変数 <code>NEXT_PUBLIC_LIFF_ID</code> を設定してください。
+          <br /><br />
+          <strong>ローカル開発:</strong> プロジェクト直下に <code>.env.local</code> を作成し、
+          <code>NEXT_PUBLIC_LIFF_ID=あなたのLIFF_ID</code> を記述。保存後、開発サーバーを再起動。
+          <br /><br />
+          <strong>Vercel:</strong> プロジェクト → Settings → Environment Variables で
+          <code>NEXT_PUBLIC_LIFF_ID</code> を追加し、再デプロイ。
         </div>
       </div>
     );
