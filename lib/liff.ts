@@ -9,18 +9,23 @@ export type Profile = {
 
 let liffInstance: typeof liff | null = null;
 
+export type InitLiffResult = { ok: true } | { ok: false; reason: string };
+
 /**
  * LIFFを初期化します
  */
-export const initLiff = async (): Promise<boolean> => {
+export const initLiff = async (): Promise<InitLiffResult> => {
   if (typeof window === 'undefined') {
-    return false;
+    return { ok: false, reason: 'window is not available' };
   }
 
   const liffId = process.env.NEXT_PUBLIC_LIFF_ID?.trim();
   if (!liffId || liffId === 'your_liff_id_here') {
-    console.error('LIFF ID is not set. Set NEXT_PUBLIC_LIFF_ID in .env.local (local) or in Vercel Environment Variables (production).');
-    return false;
+    return {
+      ok: false,
+      reason:
+        'NEXT_PUBLIC_LIFF_ID が設定されていません。Vercel の場合は Environment Variables に追加し、保存後に Redeploy してください。',
+    };
   }
 
   try {
@@ -28,10 +33,25 @@ export const initLiff = async (): Promise<boolean> => {
       await liff.init({ liffId });
       liffInstance = liff;
     }
-    return true;
+    return { ok: true };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : String(error);
     console.error('LIFF initialization failed:', error);
-    return false;
+    if (
+      /endpoint|url|domain|redirect/i.test(message) ||
+      message.includes('invalid')
+    ) {
+      return {
+        ok: false,
+        reason:
+          'LIFF のエンドポイントURL がこのアプリのURLと一致していません。LINE Developers Console の LIFF 設定で、エンドポイントURL をこのアプリのURL（例: https://xxx.vercel.app）に変更してください。',
+      };
+    }
+    return {
+      ok: false,
+      reason: `LIFFの初期化に失敗しました: ${message}`,
+    };
   }
 };
 

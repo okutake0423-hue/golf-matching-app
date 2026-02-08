@@ -11,13 +11,23 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Firebaseアプリの初期化（既に初期化されている場合は再利用）
-let app: FirebaseApp;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+function getOrCreateApp(): FirebaseApp {
+  if (getApps().length > 0) {
+    return getApps()[0] as FirebaseApp;
+  }
+  if (
+    !firebaseConfig.apiKey ||
+    !firebaseConfig.projectId ||
+    firebaseConfig.apiKey === 'your_firebase_api_key'
+  ) {
+    throw new Error(
+      'Firebaseの環境変数が設定されていません。Vercelの場合は Settings → Environment Variables で NEXT_PUBLIC_FIREBASE_API_KEY と NEXT_PUBLIC_FIREBASE_PROJECT_ID などを設定し、保存後に「Redeploy」してください。'
+    );
+  }
+  return initializeApp(firebaseConfig);
 }
+
+const app = getOrCreateApp();
 
 // Authインスタンスの取得
 export const auth: Auth = getAuth(app);

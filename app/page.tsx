@@ -31,17 +31,24 @@ export default function Home() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        const initialized = await initLiff();
-        setIsInitialized(initialized);
+        const result = await initLiff();
+        setIsInitialized(result.ok);
 
-        if (initialized && isLoggedIn()) {
+        if (!result.ok) {
+          setError(result.reason);
+          return;
+        }
+
+        if (isLoggedIn()) {
           const lineProfile = await getProfile();
           const merged = await loadMergedProfile(lineProfile);
           setProfile(merged);
         }
       } catch (err) {
         console.error('Initialization error:', err);
-        setError('初期化に失敗しました');
+        setError(
+          err instanceof Error ? err.message : '初期化に失敗しました'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -90,17 +97,14 @@ export default function Home() {
   if (!isInitialized) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>
-          <strong>LIFFの初期化に失敗しました。</strong>
-          <br /><br />
-          環境変数 <code>NEXT_PUBLIC_LIFF_ID</code> を設定してください。
-          <br /><br />
-          <strong>ローカル開発:</strong> プロジェクト直下に <code>.env.local</code> を作成し、
-          <code>NEXT_PUBLIC_LIFF_ID=あなたのLIFF_ID</code> を記述。保存後、開発サーバーを再起動。
-          <br /><br />
-          <strong>Vercel:</strong> プロジェクト → Settings → Environment Variables で
-          <code>NEXT_PUBLIC_LIFF_ID</code> を追加し、再デプロイ。
-        </div>
+        <main className={styles.main}>
+          <h1 className={styles.title}>ゴルフマッチングアプリ</h1>
+          <div className={styles.error}>
+            <strong>初期化に失敗しました</strong>
+            <br /><br />
+            {error || '不明なエラー'}
+          </div>
+        </main>
       </div>
     );
   }

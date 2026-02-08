@@ -337,6 +337,51 @@ git push origin main
 
 ---
 
+## よくあるエラー（Vercel）
+
+### `Firebase: Error (auth/invalid-api-key)`
+
+**原因**: Vercel に Firebase 用の環境変数が入っていないか、値が間違っています。
+
+**対処**:
+
+1. Vercel ダッシュボード → 対象プロジェクト → **Settings** → **Environment Variables**
+2. 次の変数が **すべて** 設定されているか確認（Production / Preview にチェック）:
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+3. 値は Firebase Console → **プロジェクトの設定** → **全般** → **マイアプリ** の `firebaseConfig` からコピー（余分なスペースや改行を入れない）
+4. **保存** したあと、**Deployments** → 最新の **⋯** → **Redeploy** を実行（環境変数を変えただけでは反映されません）
+
+---
+
+### ログイン画面が出ない・「初期化に失敗しました」と表示される
+
+**原因**: LIFF の初期化に失敗しています。主に次の2点です。
+
+**1. Vercel に `NEXT_PUBLIC_LIFF_ID` が入っていない**
+
+- Vercel → 対象プロジェクト → **Settings** → **Environment Variables**
+- **Key**: `NEXT_PUBLIC_LIFF_ID`
+- **Value**: LINE Developers Console の LIFF で表示されている **LIFF ID**（数字のみの文字列）
+- **Save** 後、**Deployments** → **⋯** → **Redeploy** を実行（必須）
+
+**2. LINE Developers の LIFF「エンドポイントURL」が本番URLと違う**
+
+- [LINE Developers Console](https://developers.line.biz/console/) → チャネル → **LIFF** タブ
+- 使用している LIFF を選択
+- **エンドポイントURL** を、Vercel の本番URLに合わせる  
+  例: `https://あなたのプロジェクト名.vercel.app`  
+  （`http://localhost:3000` のままにしていると、本番で開いたときに初期化に失敗します）
+- **更新** をクリック
+
+画面上に表示されるメッセージ（「NEXT_PUBLIC_LIFF_ID が…」「エンドポイントURL が…」など）に従って上記を確認してください。
+
+---
+
 ## 注意事項
 
 - `.env.local` および `firebase-admin-key.json` は Git にコミットしないでください（`.gitignore` に含まれています）
