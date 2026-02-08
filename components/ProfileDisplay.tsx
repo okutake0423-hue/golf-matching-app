@@ -12,8 +12,8 @@ type Props = {
 
 export function ProfileDisplay({ profile, onEdit, onLogout }: Props) {
   const playStyleLabel =
-    PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
-    profile.playStyle ||
+    (PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
+      profile.playStyle) ||
     '—';
 
   const hasCustomInfo =
