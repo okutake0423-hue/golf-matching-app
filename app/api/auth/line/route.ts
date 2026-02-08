@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * LIFFのIDトークンを検証してFirebaseのカスタムトークンを生成するAPI
+ * Vercel等の本番環境では環境変数のみを使用（firebase-admin-key.jsonは参照しない）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -35,78 +36,41 @@ export async function POST(request: NextRequest) {
 
     const lineProfile = await verifyResponse.json();
 
-    // Firebase Admin SDKを使用してカスタムトークンを生成
-    let admin;
-    try {
-      // 動的インポート（サーバーサイドでのみ動作）
-      admin = await import('firebase-admin');
-      
-      // Firebase Admin SDKの初期化（まだ初期化されていない場合）
-      if (!admin.apps.length) {
-        // 環境変数から設定を読み込む
-        const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
-        const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-        const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-        if (projectId && clientEmail && privateKey) {
-          // 環境変数から初期化
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId,
-              clientEmail,
-              privateKey,
-            }),
-          });
-        } else {
-          // サービスアカウントJSONファイルから初期化を試みる
-          try {
-            // 動的インポートでJSONファイルを読み込む（存在する場合のみ）
-            const serviceAccountModule = await import('@/firebase-admin-key.json').catch(() => null);
-            if (serviceAccountModule && serviceAccountModule.default) {
-              admin.initializeApp({
-                credential: admin.credential.cert(serviceAccountModule.default as any),
-              });
-            } else {
-              return NextResponse.json(
-                { 
-                  message: 'Firebase Admin SDKの設定が見つかりません。環境変数またはfirebase-admin-key.jsonを設定してください。',
-                  error: 'Firebase Admin SDK not configured'
-                },
-                { status: 500 }
-              );
-            }
-          } catch (jsonError) {
-            return NextResponse.json(
-              { 
-                message: 'Firebase Admin SDKの設定が見つかりません。環境変数またはfirebase-admin-key.jsonを設定してください。',
-                error: 'Firebase Admin SDK not configured'
-              },
-              { status: 500 }
-            );
-          }
-        }
-      }
-
-      // カスタムトークンを生成（LINEのユーザーIDをFirebaseのUIDとして使用）
-      const customToken = await admin.auth().createCustomToken(lineProfile.sub);
-
-      return NextResponse.json({ customToken });
-    } catch (adminError) {
-      console.error('Firebase Admin SDK error:', adminError);
+    if (!projectId || !clientEmail || !privateKey) {
       return NextResponse.json(
-        { 
-          message: 'Firebase Admin SDKの初期化に失敗しました',
-          error: adminError instanceof Error ? adminError.message : 'Unknown error'
+        {
+          message:
+            'Firebase Admin SDKの設定が見つかりません。Vercelの環境変数に FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY を設定してください。',
+          error: 'Firebase Admin SDK not configured',
         },
         { status: 500 }
       );
     }
+
+    const admin = await import('firebase-admin');
+
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    }
+
+    const customToken = await admin.auth().createCustomToken(lineProfile.sub);
+    return NextResponse.json({ customToken });
   } catch (error) {
     console.error('Auth API error:', error);
     return NextResponse.json(
-      { 
+      {
         message: '認証処理中にエラーが発生しました',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
