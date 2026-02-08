@@ -98,16 +98,36 @@ export default function Home() {
     );
   }
 
+  const handleRetryInit = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const result = await initLiff();
+      setIsInitialized(result.ok);
+      if (!result.ok) setError(result.reason);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '初期化に失敗しました');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isInitialized) {
     return (
       <div className={styles.container}>
         <main className={styles.main}>
           <h1 className={styles.title}>ゴルフマッチングアプリ</h1>
           <div className={styles.error}>
-            <strong>初期化に失敗しました</strong>
+            <strong>LIFFの初期化に失敗しました</strong>
             <br /><br />
             {error || '不明なエラー'}
           </div>
+          <p className={styles.errorHint}>
+            上記を確認しても解決しない場合は、LINE アプリ内でこのリンクを再度タップして開き直してください。
+          </p>
+          <button type="button" onClick={handleRetryInit} className={styles.button}>
+            再試行
+          </button>
         </main>
       </div>
     );

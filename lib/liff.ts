@@ -57,7 +57,8 @@ export const initLiff = async (): Promise<InitLiffResult> => {
     }
     return {
       ok: false,
-      reason: `LIFFの初期化に失敗しました: ${message}`,
+      reason:
+        `LIFFの初期化に失敗しました: ${message}\n\n確認してください：\n・LINE アプリから「LIFF を開く」で開いていますか？（ブラウザでURLを直接開くと失敗します）\n・LINE Developers Console → LIFF の「エンドポイント URL」が、今のアドレスと完全に一致していますか？\n・NEXT_PUBLIC_LIFF_ID とエンドポイント URL は本番環境に合わせて設定済みですか？`,
     };
   }
 };
