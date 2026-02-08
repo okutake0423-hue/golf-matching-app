@@ -372,6 +372,17 @@ git push origin main
 
 ---
 
+### `Content Security Policy of your site blocks the use of 'eval' in JavaScript`
+
+**原因**: サイトの Content Security Policy (CSP) が `eval` を禁止しており、Next.js / react-calendar / Firebase などが内部で使う `eval` がブロックされています。
+
+**対処**:
+
+1. **このリポジトリの対応**: `next.config.js` で CSP ヘッダーを出しており、`script-src` に `'unsafe-eval'` を許可しています。最新コードをデプロイしたうえで、ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください。
+2. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
+
+---
+
 ### ログイン画面が出ない・「初期化に失敗しました」と表示される
 
 **原因**: LIFF の初期化に失敗しています。主に次の2点です。
