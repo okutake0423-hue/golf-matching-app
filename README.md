@@ -378,11 +378,15 @@ git push origin main
 
 **対処**:
 
-1. **このリポジトリの対応**: `next.config.js` で CSP ヘッダーを設定しており、以下を許可しています：
-   - `script-src` に `'unsafe-eval'` と `https://static.line-scdn.net`（LIFF SDK 用）
+1. **変更をデプロイ**: `next.config.js` で CSP ヘッダーを設定しており、以下を許可しています：
+   - `script-src` と `script-src-elem` に `'unsafe-eval'` と `https://static.line-scdn.net`（LIFF SDK 用）
    - `connect-src` に LINE の API ドメイン
-   - 最新コードをデプロイしたうえで、ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください。
-2. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
+   - **重要**: 変更をコミット・プッシュして、**Vercel でデプロイが完了**しているか確認してください
+2. **CSP ヘッダーの確認**: ブラウザの開発者ツール（F12）→ **Network** タブ → ページをリロード → 最初の HTML リクエストを選択 → **Headers** → **Response Headers** で `Content-Security-Policy` を確認
+   - `https://static.line-scdn.net` が含まれているか確認
+   - 含まれていない場合、デプロイが完了していないか、別の場所で CSP が設定されている可能性があります
+3. **キャッシュクリア**: ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください
+4. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
 
 ---
 
