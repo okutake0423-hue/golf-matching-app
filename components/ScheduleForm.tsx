@@ -131,13 +131,13 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
             />
           </div>
           <div className={styles.field}>
-            <label>プレーフィー（円）</label>
+            <label>プレーフィー（THB）</label>
             <input
               type="number"
               min={0}
               value={playFee}
               onChange={(e) => setPlayFee(e.target.value)}
-              placeholder="例: 15000"
+              placeholder="例: 2000-3000"
             />
           </div>
           <div className={styles.field}>
@@ -186,17 +186,17 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
               type="text"
               value={wishArea}
               onChange={(e) => setWishArea(e.target.value)}
-              placeholder="例: 千葉県"
+              placeholder="例: バンコク近郊"
             />
           </div>
           <div className={styles.field}>
-            <label>上限プレーフィー（円）</label>
+            <label>上限プレーフィー（THB）</label>
             <input
               type="number"
               min={0}
               value={maxPlayFee}
               onChange={(e) => setMaxPlayFee(e.target.value)}
-              placeholder="例: 20000"
+              placeholder="例: 2000-3000"
             />
           </div>
         </>

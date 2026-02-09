@@ -19,6 +19,15 @@
   border-radius: 50%;
 }
 
+.dotWish {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 2px auto 0;
+  background: #2196f3;
+  border-radius: 50%;
+}
+
 .wrapper :global(.react-calendar__tile--now) {
   background: #e8f5e9;
 }
@@ -29,5 +38,9 @@
 }
 
 .wrapper :global(.react-calendar__tile--active) .dot {
+  background: #fff;
+}
+
+.wrapper :global(.react-calendar__tile--active) .dotWish {
   background: #fff;
 }

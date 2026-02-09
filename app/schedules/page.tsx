@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
-import { getSchedulesByMonth, addSchedule } from '@/lib/firestore-schedules';
+import { getSchedulesByMonth, addSchedule, deleteSchedule } from '@/lib/firestore-schedules';
 import { ScheduleList } from '@/components/ScheduleList';
 import { ScheduleForm } from '@/components/ScheduleForm';
 import type { ScheduleDoc, ScheduleFormData } from '@/types/schedule';
@@ -93,6 +93,19 @@ export default function SchedulesPage() {
     document.getElementById('schedule-form')?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  const handleDelete = useCallback(
+    async (scheduleId: string) => {
+      try {
+        await deleteSchedule(scheduleId);
+        await loadSchedules(monthKey);
+      } catch (err) {
+        console.error('Failed to delete schedule:', err);
+        setError('削除に失敗しました');
+      }
+    },
+    [monthKey, loadSchedules]
+  );
+
   const listSchedules = selectedDate
     ? schedules.filter((s) => s.dateStr === toDateStr(selectedDate))
     : schedules;
@@ -154,7 +167,12 @@ export default function SchedulesPage() {
           {loading ? (
             <p className={styles.loading}>取得中...</p>
           ) : (
-            <ScheduleList schedules={listSchedules} dateLabel={dateLabel} />
+            <ScheduleList
+              schedules={listSchedules}
+              dateLabel={dateLabel}
+              currentUserId={userId}
+              onDelete={handleDelete}
+            />
           )}
         </section>
 

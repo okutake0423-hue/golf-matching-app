@@ -41,22 +41,39 @@ export function ScheduleCalendar({
   activeMonthKey,
   onActiveMonthChange,
 }: Props) {
-  const dateStrSet = useCallback(() => {
-    const set = new Set<string>();
+  const dateStrMap = useCallback(() => {
+    const map = new Map<string, { hasRecruit: boolean; hasWish: boolean }>();
     const list = Array.isArray(schedules) ? schedules : [];
     list.forEach((s) => {
-      if (s?.dateStr) set.add(s.dateStr);
+      if (s?.dateStr) {
+        const current = map.get(s.dateStr) || { hasRecruit: false, hasWish: false };
+        if (s.type === 'RECRUIT') {
+          current.hasRecruit = true;
+        } else if (s.type === 'WISH') {
+          current.hasWish = true;
+        }
+        map.set(s.dateStr, current);
+      }
     });
-    return set;
+    return map;
   }, [schedules])();
 
   const tileContent = useCallback(
     ({ date }: { date: Date }) => {
       const str = toDateStr(date);
-      if (!dateStrSet.has(str)) return null;
-      return <span className={styles.dot} aria-hidden />;
+      const info = dateStrMap.get(str);
+      if (!info) return null;
+      
+      // 希望と募集の両方がある場合は希望を優先（青色）
+      if (info.hasWish) {
+        return <span className={styles.dotWish} aria-hidden />;
+      }
+      if (info.hasRecruit) {
+        return <span className={styles.dot} aria-hidden />;
+      }
+      return null;
     },
-    [dateStrSet]
+    [dateStrMap]
   );
 
   const handleChange = useCallback(

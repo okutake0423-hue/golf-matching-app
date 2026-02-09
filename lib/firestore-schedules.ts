@@ -7,6 +7,8 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  doc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type {
@@ -176,4 +178,12 @@ export async function getSchedulesByDate(
     }
   });
   return list;
+}
+
+/**
+ * 予定を削除
+ */
+export async function deleteSchedule(scheduleId: string): Promise<void> {
+  const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
+  await deleteDoc(ref);
 }
