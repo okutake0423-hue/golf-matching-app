@@ -20,6 +20,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.line-scdn.net https://*.line-scdn.net",
               "script-src-elem 'self' 'unsafe-inline' https://static.line-scdn.net https://*.line-scdn.net",
+              "script-src-attr 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://static.line-scdn.net https://*.line-scdn.net",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com https://liff.line.me https://api.line.me https://*.line.me https://*.line-apps.com https://*.line-scdn.net wss://*.firebaseio.com",

@@ -156,9 +156,32 @@ service cloud.firestore {
 
 ※ 本アプリでは LINE ログインのみのため、クライアントから直接 Firestore に書く場合は「開発用」ルールか、別途 Cloud Functions 等で認証を挟む運用を検討してください。
 
-### 4. 予定（schedules）用の複合インデックス（任意）
+### 4. 予定（schedules）用の複合インデックス
 
-月別で予定を取得するクエリを使う場合、初回実行時に Firestore がコンソールでインデックス作成を促すことがあります。その場合は表示されたリンクから **「インデックスを作成」** をクリックしてください。手動で作成する場合: Firestore → **「インデックス」** タブ → 複合インデックスを追加し、コレクション ID `schedules`、フィールド `monthKey`（昇順）、`dateStr`（昇順）、`createdAt`（昇順）を指定します。
+月別で予定を取得するクエリを使う場合、Firestore がインデックス作成を要求します。
+
+**エラーが出た場合の対処**:
+
+1. **エラーメッセージのリンクから作成（最も簡単）**:
+   - ブラウザのコンソール（F12 → Console）に表示されているエラーメッセージに、`https://console.firebase.google.com/v1/r/project/...` というリンクが含まれています
+   - そのリンクをクリックすると、Firebase Console のインデックス作成画面が開きます
+   - **「インデックスを作成」** ボタンをクリック
+   - インデックスの作成が完了するまで数分かかります（完了するとメールが届く場合があります）
+
+2. **手動で作成する場合**:
+   - [Firebase Console](https://console.firebase.google.com/) → 対象プロジェクト → **Firestore Database**
+   - **「インデックス」** タブを開く
+   - **「複合インデックスを追加」** をクリック
+   - 以下を設定:
+     - **コレクション ID**: `schedules`
+     - **フィールド**: 
+       - `monthKey`（昇順）
+       - `dateStr`（昇順）
+       - `createdAt`（昇順）
+   - **「作成」** をクリック
+   - インデックスの作成が完了するまで数分かかります
+
+**重要**: インデックスの作成が完了するまで、予定の取得がエラーになります。作成が完了したら、アプリをリロードして再試行してください。
 
 ### 5. 動作確認
 
@@ -378,15 +401,45 @@ git push origin main
 
 **対処**:
 
-1. **変更をデプロイ**: `next.config.js` で CSP ヘッダーを設定しており、以下を許可しています：
+1. **ブラウザで実際の CSP ヘッダーを確認（最も確実な方法）**:
+   
+   以下の手順で、実際に送信されている CSP ヘッダーを確認できます：
+   
+   **手順**:
+   1. アプリの URL を開く（例: `https://your-app.vercel.app`）
+   2. **F12キー**を押して開発者ツールを開く
+   3. 上部のタブから **Network**（ネットワーク）をクリック
+   4. ページをリロード（**F5キー**または**Ctrl+R**）
+   5. Network タブの一覧で、一番上のリクエスト（通常は `/` やページ名）をクリック
+   6. 右側に詳細が表示されるので、**Headers**（ヘッダー）タブをクリック
+   7. 下にスクロールして **Response Headers**（レスポンスヘッダー）セクションを探す
+   8. `Content-Security-Policy` という項目を探す
+   9. その値を確認:
+      - ✅ **正しい場合**: `https://static.line-scdn.net` が含まれている
+        ```
+        script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.line-scdn.net https://*.line-scdn.net
+        ```
+      - ❌ **問題がある場合**: LINE の CDN が含まれていない
+        ```
+        script-src 'self' 'unsafe-eval' 'unsafe-inline'
+        ```
+   
+   **見つからない場合**: `Content-Security-Policy` という項目自体がない場合は、CSP が設定されていない可能性があります（`next.config.js` の設定が反映されていない可能性）
+
+2. **変更をデプロイ**: `next.config.js` で CSP ヘッダーを設定しており、以下を許可しています：
    - `script-src` と `script-src-elem` に `'unsafe-eval'` と `https://static.line-scdn.net`（LIFF SDK 用）
    - `connect-src` に LINE の API ドメイン
    - **重要**: 変更をコミット・プッシュして、**Vercel でデプロイが完了**しているか確認してください
-2. **CSP ヘッダーの確認**: ブラウザの開発者ツール（F12）→ **Network** タブ → ページをリロード → 最初の HTML リクエストを選択 → **Headers** → **Response Headers** で `Content-Security-Policy` を確認
-   - `https://static.line-scdn.net` が含まれているか確認
-   - 含まれていない場合、デプロイが完了していないか、別の場所で CSP が設定されている可能性があります
-3. **キャッシュクリア**: ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください
-4. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
+
+3. **デプロイの確認**: 
+   - `next.config.js` の変更をコミット・プッシュしたか確認
+   - [Vercel ダッシュボード](https://vercel.com/dashboard) → プロジェクト → **Deployments** タブ
+   - 最新のデプロイが **Ready**（緑）になっているか確認
+   - まだ **Building** の場合は完了を待つ
+
+4. **キャッシュクリア**: ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください
+
+5. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
 
 ---
 
@@ -434,6 +487,8 @@ LIFF が LINE のサーバーに接続できていません。次を確認して
 2. **「ルール」** タブを開く
 3. 次のルールに書き換え、**「公開」** をクリック
 
+**開発・テスト用（誰でも読み書き可能）:**
+
 ```text
 rules_version = '2';
 service cloud.firestore {
@@ -441,13 +496,18 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if true;
     }
+    match /schedules/{scheduleId} {
+      allow read, write: if true;
+    }
   }
 }
 ```
 
-これで `users` コレクションへの読み書きが許可され、プロフィールの表示・保存が動きます。
+これで `users` と `schedules` コレクションへの読み書きが許可され、プロフィールの表示・保存と予定の投稿・表示が動きます。
 
-※ 本番でより厳しくする場合は、Cloud Functions などサーバー側で Firestore を操作する構成に変更する必要があります。
+**重要**: 
+- このルールは開発・テスト用です。本番環境では、Cloud Functions などサーバー側で Firestore を操作する構成に変更することを推奨します
+- ルールを変更した後、必ず **「公開」** ボタンをクリックしてください（保存だけでは反映されません）
 
 ---
 

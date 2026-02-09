@@ -89,6 +89,10 @@ export default function SchedulesPage() {
     [userId, loadSchedules]
   );
 
+  const scrollToForm = useCallback(() => {
+    document.getElementById('schedule-form')?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
   const listSchedules = selectedDate
     ? schedules.filter((s) => s.dateStr === toDateStr(selectedDate))
     : schedules;
@@ -116,10 +120,6 @@ export default function SchedulesPage() {
       </div>
     );
   }
-
-  const scrollToForm = useCallback(() => {
-    document.getElementById('schedule-form')?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
 
   return (
     <div className={styles.container}>
