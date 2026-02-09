@@ -30,25 +30,36 @@ export default function Home() {
 
   useEffect(() => {
     const initialize = async () => {
+      console.log('[App] 初期化開始', {
+        url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+        userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'N/A',
+      });
       try {
         const result = await initLiff();
+        console.log('[App] LIFF初期化結果:', result);
         setIsInitialized(result.ok);
 
         if (!result.ok) {
+          console.error('[App] LIFF初期化失敗:', result.reason);
           setError(result.reason);
           return;
         }
 
         if (isLoggedIn()) {
+          console.log('[App] ログイン済み、プロフィール取得中...');
           const lineProfile = await getProfile();
           const merged = await loadMergedProfile(lineProfile);
           setProfile(merged);
+          console.log('[App] プロフィール取得完了');
+        } else {
+          console.log('[App] 未ログイン');
         }
       } catch (err) {
-        console.error('Initialization error:', err);
-        setError(
-          err instanceof Error ? err.message : '初期化に失敗しました'
-        );
+        console.error('[App] 初期化エラー:', err);
+        const errorMessage = err instanceof Error 
+          ? `${err.message}\n\nスタック:\n${err.stack || 'なし'}`
+          : String(err);
+        setError(`予期しないエラーが発生しました:\n\n${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
@@ -116,6 +127,7 @@ export default function Home() {
     const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
     const liffIdSet = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_LIFF_ID && process.env.NEXT_PUBLIC_LIFF_ID !== 'your_liff_id_here';
     const isLineBrowser = typeof window !== 'undefined' && /Line/i.test(navigator.userAgent);
+    const userAgent = typeof window !== 'undefined' ? navigator.userAgent : '';
     
     return (
       <div className={styles.container}>
@@ -133,17 +145,20 @@ export default function Home() {
               <li>現在のURL: <code>{currentUrl || '取得できませんでした'}</code></li>
               <li>LIFF ID設定: {liffIdSet ? '✓ 設定済み' : '✗ 未設定またはデフォルト値'}</li>
               <li>ブラウザ: {isLineBrowser ? '✓ LINEアプリ内ブラウザ' : '✗ 通常のブラウザ（LINEアプリから開いてください）'}</li>
+              <li>User Agent: <code style={{ fontSize: '11px', wordBreak: 'break-all' }}>{userAgent || '取得できませんでした'}</code></li>
             </ul>
             <p className={styles.diagnosticNote}>
               <strong>確認手順:</strong><br />
-              1. LINE Developers Console → チャネル → LIFF → エンドポイントURL が上記「現在のURL」と完全に一致しているか確認<br />
-              2. Vercel → Settings → Environment Variables に NEXT_PUBLIC_LIFF_ID が設定され、Redeploy 済みか確認<br />
-              3. LINE アプリ内でこのリンクを再度タップして開き直す
+              1. <strong>ブラウザのコンソールを開く</strong>（F12 → Console タブ）で、`[LIFF]` や `[App]` で始まるログを確認してください<br />
+              2. LINE Developers Console → チャネル → LIFF → エンドポイントURL が上記「現在のURL」と<strong>完全に一致</strong>しているか確認（大文字小文字、末尾の / も含めて）<br />
+              3. Vercel → Settings → Environment Variables に NEXT_PUBLIC_LIFF_ID が設定され、<strong>Redeploy 済み</strong>か確認<br />
+              4. LINE アプリ内でこのリンクを再度タップして開き直す<br />
+              5. それでも解決しない場合、コンソールに表示されている<strong>エラーメッセージ全体</strong>をコピーして共有してください
             </p>
           </div>
           
           <p className={styles.errorHint}>
-            上記を確認しても解決しない場合は、LINE アプリ内でこのリンクを再度タップして開き直してください。
+            <strong>重要:</strong> ブラウザの開発者ツール（F12）→ Console タブに詳細なエラー情報が表示されています。その内容を確認してください。
           </p>
           <button type="button" onClick={handleRetryInit} className={styles.button}>
             再試行

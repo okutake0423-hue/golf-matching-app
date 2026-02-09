@@ -372,13 +372,16 @@ git push origin main
 
 ---
 
-### `Content Security Policy of your site blocks the use of 'eval' in JavaScript`
+### `Content Security Policy ... blocks the use of 'eval'` または `Loading the script 'https://static.line-scdn.net/...' violates CSP`
 
-**原因**: サイトの Content Security Policy (CSP) が `eval` を禁止しており、Next.js / react-calendar / Firebase などが内部で使う `eval` がブロックされています。
+**原因**: Content Security Policy (CSP) が、Next.js / react-calendar / Firebase の `eval` や、LIFF SDK が読み込む LINE の CDN スクリプトをブロックしています。
 
 **対処**:
 
-1. **このリポジトリの対応**: `next.config.js` で CSP ヘッダーを出しており、`script-src` に `'unsafe-eval'` を許可しています。最新コードをデプロイしたうえで、ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください。
+1. **このリポジトリの対応**: `next.config.js` で CSP ヘッダーを設定しており、以下を許可しています：
+   - `script-src` に `'unsafe-eval'` と `https://static.line-scdn.net`（LIFF SDK 用）
+   - `connect-src` に LINE の API ドメイン
+   - 最新コードをデプロイしたうえで、ブラウザのハードリロード（`Ctrl+Shift+R`）やシークレットウィンドウで再試行してください。
 2. **LINE アプリ内ブラウザ（LIFF）でまだ出る場合**: LINE 側の CSP が優先されている可能性があります。一度 **LINE 外のブラウザ**（Chrome や Safari でアプリの URL を直接開く）で「予定を見る」を試し、そちらではエラーが出ないか確認してください。LINE 内では CSP の制限をこちらから変更できないため、改善しない場合はカレンダーを別実装に差し替える必要があります。
 
 ---
