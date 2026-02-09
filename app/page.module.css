@@ -57,6 +57,49 @@
   text-align: center;
 }
 
+.diagnostic {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 20px 0;
+  font-size: 14px;
+  text-align: left;
+}
+
+.diagnostic strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.diagnostic ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.diagnostic li {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.diagnostic code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  word-break: break-all;
+}
+
+.diagnosticNote {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #555;
+}
+
 .login {
   text-align: center;
 }

@@ -113,6 +113,10 @@ export default function Home() {
   };
 
   if (!isInitialized) {
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const liffIdSet = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_LIFF_ID && process.env.NEXT_PUBLIC_LIFF_ID !== 'your_liff_id_here';
+    const isLineBrowser = typeof window !== 'undefined' && /Line/i.test(navigator.userAgent);
+    
     return (
       <div className={styles.container}>
         <main className={styles.main}>
@@ -122,6 +126,22 @@ export default function Home() {
             <br /><br />
             {error || '不明なエラー'}
           </div>
+          
+          <div className={styles.diagnostic}>
+            <strong>診断情報:</strong>
+            <ul>
+              <li>現在のURL: <code>{currentUrl || '取得できませんでした'}</code></li>
+              <li>LIFF ID設定: {liffIdSet ? '✓ 設定済み' : '✗ 未設定またはデフォルト値'}</li>
+              <li>ブラウザ: {isLineBrowser ? '✓ LINEアプリ内ブラウザ' : '✗ 通常のブラウザ（LINEアプリから開いてください）'}</li>
+            </ul>
+            <p className={styles.diagnosticNote}>
+              <strong>確認手順:</strong><br />
+              1. LINE Developers Console → チャネル → LIFF → エンドポイントURL が上記「現在のURL」と完全に一致しているか確認<br />
+              2. Vercel → Settings → Environment Variables に NEXT_PUBLIC_LIFF_ID が設定され、Redeploy 済みか確認<br />
+              3. LINE アプリ内でこのリンクを再度タップして開き直す
+            </p>
+          </div>
+          
           <p className={styles.errorHint}>
             上記を確認しても解決しない場合は、LINE アプリ内でこのリンクを再度タップして開き直してください。
           </p>
