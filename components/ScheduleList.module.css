@@ -151,3 +151,28 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.notifyButton {
+  position: absolute;
+  top: 6px;
+  left: 50px;
+  background: #2196f3;
+  color: #fff;
+  border: none;
+  width: 50px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notifyButton:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.notifyButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -12,9 +12,10 @@ type Props = {
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
+  onNotify?: (scheduleId: string) => Promise<void>;
 };
 
-export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin }: Props) {
+export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin, onNotify }: Props) {
   if (schedules.length === 0) {
     return (
       <div className={styles.empty}>
@@ -34,6 +35,7 @@ export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserN
               currentUserName={currentUserName}
               onDelete={onDelete}
               onJoin={onJoin}
+              onNotify={onNotify}
             />
           ) : (
             <WishCard
@@ -54,12 +56,14 @@ function RecruitCard({
   currentUserName,
   onDelete,
   onJoin,
+  onNotify,
 }: {
   schedule: ScheduleRecruit;
   currentUserId?: string | null;
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
+  onNotify?: (scheduleId: string) => Promise<void>;
 }) {
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -135,21 +139,36 @@ function RecruitCard({
     }
   };
 
+  const handleNotify = () => {
+    if (!schedule.id || !onNotify) return;
+    onNotify(schedule.id);
+  };
+
   return (
     <div className={styles.card}>
       <span className={isCompetition ? styles.badgeCompetition : styles.badge}>
         {isCompetition ? 'コンペ' : '募集'}
       </span>
       {isOwnPost && schedule.id && (
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className={styles.deleteButton}
-          aria-label="削除"
-        >
-          {isDeleting ? '削除中...' : '×'}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={styles.deleteButton}
+            aria-label="削除"
+          >
+            {isDeleting ? '削除中...' : '×'}
+          </button>
+          <button
+            type="button"
+            onClick={handleNotify}
+            className={styles.notifyButton}
+            aria-label="通知"
+          >
+            通知
+          </button>
+        </>
       )}
       <p className={styles.posterName}>投稿者: {posterName || '読み込み中...'}</p>
       <p className={styles.dateTime}>
