@@ -42,13 +42,16 @@ export function ScheduleCalendar({
   onActiveMonthChange,
 }: Props) {
   const dateStrMap = useCallback(() => {
-    const map = new Map<string, { hasRecruit: boolean; hasWish: boolean }>();
+    const map = new Map<string, { hasRecruit: boolean; hasWish: boolean; hasCompetition: boolean }>();
     const list = Array.isArray(schedules) ? schedules : [];
     list.forEach((s) => {
       if (s?.dateStr) {
-        const current = map.get(s.dateStr) || { hasRecruit: false, hasWish: false };
+        const current = map.get(s.dateStr) || { hasRecruit: false, hasWish: false, hasCompetition: false };
         if (s.type === 'RECRUIT') {
           current.hasRecruit = true;
+          if (s.isCompetition) {
+            current.hasCompetition = true;
+          }
         } else if (s.type === 'WISH') {
           current.hasWish = true;
         }
@@ -64,7 +67,10 @@ export function ScheduleCalendar({
       const info = dateStrMap.get(str);
       if (!info) return null;
       
-      // 希望と募集の両方がある場合は希望を優先（青色）
+      // 優先順位: コンペ（赤色） > 希望（青色） > 募集（緑色）
+      if (info.hasCompetition) {
+        return <span className={styles.dotCompetition} aria-hidden />;
+      }
       if (info.hasWish) {
         return <span className={styles.dotWish} aria-hidden />;
       }

@@ -53,6 +53,8 @@ export async function addSchedule(
       playFee: Number(form.playFee) || 0,
       recruitCount: Number(form.recruitCount) || 0,
       participants: form.participants ?? [],
+      isCompetition: form.isCompetition || null,
+      competitionName: form.competitionName?.trim() || null,
       monthKey,
       createdAt: serverTimestamp(),
     };
@@ -107,6 +109,8 @@ export async function getSchedulesByMonth(
         playFee: data.playFee ?? 0,
         recruitCount: data.recruitCount ?? 0,
         participants: data.participants ?? [],
+        isCompetition: data.isCompetition ?? false,
+        competitionName: data.competitionName,
         monthKey: data.monthKey,
         createdAt: data.createdAt,
       } as ScheduleRecruit);
@@ -158,6 +162,8 @@ export async function getSchedulesByDate(
         playFee: data.playFee ?? 0,
         recruitCount: data.recruitCount ?? 0,
         participants: data.participants ?? [],
+        isCompetition: data.isCompetition ?? false,
+        competitionName: data.competitionName,
         monthKey: data.monthKey,
         createdAt: data.createdAt,
       } as ScheduleRecruit);

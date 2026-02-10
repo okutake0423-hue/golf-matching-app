@@ -59,6 +59,7 @@ function RecruitCard({
   const playFee = Number(schedule.playFee) || 0;
   const recruitCount = Number(schedule.recruitCount) || 0;
   const isOwnPost = currentUserId === schedule.posterId;
+  const isCompetition = schedule.isCompetition ?? false;
 
   useEffect(() => {
     const loadPosterName = async () => {
@@ -89,7 +90,9 @@ function RecruitCard({
 
   return (
     <div className={styles.card}>
-      <span className={styles.badge}>募集</span>
+      <span className={isCompetition ? styles.badgeCompetition : styles.badge}>
+        {isCompetition ? 'コンペ' : '募集'}
+      </span>
       {isOwnPost && schedule.id && (
         <button
           type="button"
@@ -105,9 +108,12 @@ function RecruitCard({
       <p className={styles.dateTime}>
         {schedule.dateStr ?? ''} {schedule.startTime ?? ''}
       </p>
+      {isCompetition && schedule.competitionName && (
+        <p className={styles.competitionName}>{schedule.competitionName}</p>
+      )}
       <p className={styles.course}>{schedule.golfCourseName ?? ''}</p>
       <p className={styles.detail}>
-        プレーフィー {playFee.toLocaleString()}円 ・ あと{recruitCount}名
+        プレーフィー {playFee.toLocaleString()}THB ・ あと{recruitCount}名
       </p>
       {participants.length > 0 && (
         <p className={styles.participants}>
@@ -178,8 +184,11 @@ function WishCard({
       <p className={styles.posterName}>投稿者: {posterName || '読み込み中...'}</p>
       <p className={styles.dateTime}>{schedule.dateStr ?? ''}</p>
       <p className={styles.course}>{place}</p>
+      {schedule.wishArea && (
+        <p className={styles.area}>希望地域: {schedule.wishArea}</p>
+      )}
       <p className={styles.detail}>
-        上限プレーフィー {maxPlayFee.toLocaleString()}円
+        上限プレーフィー {maxPlayFee.toLocaleString()}THB
       </p>
     </div>
   );

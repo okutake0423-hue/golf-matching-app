@@ -40,7 +40,7 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props
             <strong>表示名:</strong> {profile.displayName}
           </p>
           <p className={styles.profileItem}>
-            <strong>ユーザーID:</strong> {profile.userId}
+            <strong>Line ID:</strong> {profile.userId?.trim() || '未登録'}
           </p>
           {profile.statusMessage && (
             <p className={styles.profileItem}>

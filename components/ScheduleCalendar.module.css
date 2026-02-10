@@ -28,6 +28,15 @@
   border-radius: 50%;
 }
 
+.dotCompetition {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 2px auto 0;
+  background: #f44336;
+  border-radius: 50%;
+}
+
 .wrapper :global(.react-calendar__tile--now) {
   background: #e8f5e9;
 }
@@ -42,5 +51,9 @@
 }
 
 .wrapper :global(.react-calendar__tile--active) .dotWish {
+  background: #fff;
+}
+
+.wrapper :global(.react-calendar__tile--active) .dotCompetition {
   background: #fff;
 }

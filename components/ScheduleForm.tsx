@@ -30,6 +30,8 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
   const [wishCourseName, setWishCourseName] = useState('');
   const [wishArea, setWishArea] = useState('');
   const [maxPlayFee, setMaxPlayFee] = useState('');
+  const [isCompetition, setIsCompetition] = useState(false);
+  const [competitionName, setCompetitionName] = useState('');
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -46,6 +48,8 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
             playFee: Number(playFee) || 0,
             recruitCount: Number(recruitCount) || 0,
             participants,
+            isCompetition: isCompetition || undefined,
+            competitionName: isCompetition ? competitionName : undefined,
           };
           await onSubmit(form);
         } else {
@@ -72,6 +76,8 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
       playFee,
       recruitCount,
       participants,
+      isCompetition,
+      competitionName,
       wishCourseName,
       wishArea,
       maxPlayFee,
@@ -166,6 +172,32 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
               <p className={styles.hint}>{participants.join(', ')}</p>
             )}
           </div>
+          <div className={styles.field}>
+            <label>
+              <input
+                type="checkbox"
+                checked={isCompetition}
+                onChange={(e) => {
+                  setIsCompetition(e.target.checked);
+                  if (!e.target.checked) {
+                    setCompetitionName('');
+                  }
+                }}
+              />
+              コンペ
+            </label>
+          </div>
+          {isCompetition && (
+            <div className={styles.field}>
+              <label>コンペ名</label>
+              <input
+                type="text"
+                value={competitionName}
+                onChange={(e) => setCompetitionName(e.target.value)}
+                placeholder="例: 社内ゴルフコンペ"
+              />
+            </div>
+          )}
         </>
       )}
 

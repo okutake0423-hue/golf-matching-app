@@ -25,12 +25,16 @@ export interface ScheduleRecruit {
   dateTime: TimestampLike;
   /** ゴルフコース名 */
   golfCourseName: string;
-  /** プレーフィー（円） */
+  /** プレーフィー（THB） */
   playFee: number;
   /** 募集人数（あと○名の「○」） */
   recruitCount: number;
   /** 参加確定者リスト（表示名または userId） */
   participants: string[];
+  /** コンペかどうか */
+  isCompetition?: boolean;
+  /** コンペ名（isCompetitionがtrueの場合） */
+  competitionName?: string;
   /** 月別取得用（YYYY-MM） */
   monthKey: string;
   createdAt: TimestampLike;
@@ -54,7 +58,7 @@ export interface ScheduleWish {
   wishCourseName?: string;
   /** 希望地域（任意。コース名とどちらか） */
   wishArea?: string;
-  /** 上限プレーフィー（円） */
+  /** 上限プレーフィー（THB） */
   maxPlayFee: number;
   /** 月別取得用（YYYY-MM） */
   monthKey: string;
@@ -77,6 +81,8 @@ export interface ScheduleRecruitForm {
   playFee: number;
   recruitCount: number;
   participants: string[];
+  isCompetition?: boolean;
+  competitionName?: string;
 }
 
 /** フォーム：希望モード用 */

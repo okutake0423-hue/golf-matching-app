@@ -46,6 +46,17 @@
   border-radius: 4px;
 }
 
+.badgeCompetition {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  background: #f44336;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
 .dateTime {
   margin: 0 0 4px;
   font-size: 13px;
@@ -74,6 +85,19 @@
   margin: 0 0 4px;
   font-size: 12px;
   color: #999;
+}
+
+.competitionName {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #f44336;
+}
+
+.area {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
 }
 
 .deleteButton {
