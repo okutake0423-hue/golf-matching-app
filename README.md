@@ -90,9 +90,11 @@ Copy-Item .env.example .env.local
 1. [LINE Developers Console](https://developers.line.biz/console/) でプロバイダー・チャネル（Messaging API）を作成
 2. チャネルの **LIFF** タブで LIFF アプリを追加
    - サイズ: Full
-   - スコープ: `profile`, `openid`
+   - **スコープ: `profile`, `openid`**（メールアドレスは不要です。`email`スコープは設定しないでください）
    - エンドポイント URL: 開発時は `http://localhost:3000`、本番は Vercel の URL
 3. 発行された **LIFF ID** を `NEXT_PUBLIC_LIFF_ID` に設定
+
+**重要**: このアプリはメールアドレスを取得しません。LIFFアプリの設定で`email`スコープを選択すると、LINE側でメールアドレス取得権限の申請が必要になります。**`profile`と`openid`のみを選択してください。**
 
 #### LINE通知の設定（任意）
 
