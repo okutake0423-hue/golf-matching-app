@@ -164,7 +164,9 @@ export default function SchedulesPage() {
 
   const handleNotify = useCallback(
     (scheduleId: string) => {
+      console.log('[SchedulesPage] handleNotify called with scheduleId:', scheduleId);
       setNotifyScheduleId(scheduleId);
+      console.log('[SchedulesPage] notifyScheduleId set to:', scheduleId);
     },
     []
   );
@@ -214,6 +216,22 @@ export default function SchedulesPage() {
   }, []);
 
   const notifySchedule = schedules.find((s) => s.id === notifyScheduleId) as ScheduleRecruit | undefined;
+
+  // デバッグログ
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[SchedulesPage] notifyScheduleId:', notifyScheduleId);
+      console.log('[SchedulesPage] notifySchedule:', notifySchedule);
+      console.log('[SchedulesPage] schedules count:', schedules.length);
+      console.log('[SchedulesPage] schedule IDs:', schedules.map((s) => s.id));
+      if (notifyScheduleId && !notifySchedule) {
+        console.warn('[SchedulesPage] notifyScheduleId exists but schedule not found!', {
+          notifyScheduleId,
+          availableIds: schedules.map((s) => s.id),
+        });
+      }
+    }
+  }, [notifyScheduleId, notifySchedule, schedules]);
 
   const listSchedules = selectedDate
     ? schedules.filter((s) => s.dateStr === toDateStr(selectedDate))
@@ -298,7 +316,7 @@ export default function SchedulesPage() {
           />
         </section>
       </main>
-      {notifySchedule && (
+      {notifyScheduleId && notifySchedule ? (
         <NotifyModal
           scheduleInfo={{
             dateStr: notifySchedule.dateStr,
@@ -310,7 +328,14 @@ export default function SchedulesPage() {
           onSend={handleSendNotify}
           onClose={handleCloseNotify}
         />
-      )}
+      ) : notifyScheduleId ? (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+            <p>予定情報を読み込み中...</p>
+            <button onClick={handleCloseNotify}>閉じる</button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

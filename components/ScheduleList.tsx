@@ -12,7 +12,7 @@ type Props = {
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
-  onNotify?: (scheduleId: string) => Promise<void>;
+  onNotify?: (scheduleId: string) => void;
 };
 
 export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin, onNotify }: Props) {
@@ -63,7 +63,7 @@ function RecruitCard({
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
-  onNotify?: (scheduleId: string) => Promise<void>;
+  onNotify?: (scheduleId: string) => void;
 }) {
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -140,7 +140,14 @@ function RecruitCard({
   };
 
   const handleNotify = () => {
-    if (!schedule.id || !onNotify) return;
+    if (!schedule.id || !onNotify) {
+      console.log('[ScheduleList] handleNotify: missing schedule.id or onNotify', {
+        scheduleId: schedule.id,
+        hasOnNotify: !!onNotify,
+      });
+      return;
+    }
+    console.log('[ScheduleList] handleNotify: calling onNotify with scheduleId', schedule.id);
     onNotify(schedule.id);
   };
 
