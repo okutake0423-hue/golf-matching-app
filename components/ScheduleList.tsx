@@ -69,7 +69,30 @@ function RecruitCard({
   const recruitCount = Number(schedule.recruitCount) || 0;
   const isOwnPost = currentUserId === schedule.posterId;
   const isCompetition = schedule.isCompetition ?? false;
-  const canJoin = !isOwnPost && currentUserId && currentUserName && recruitCount > 0 && !participants.includes(currentUserName);
+  
+  // 参加ボタン表示条件
+  // currentUserNameがnullの場合は、currentUserIdを使用して参加判定を行う
+  const userIdentifier = currentUserName || currentUserId || '';
+  const canJoin = !isOwnPost 
+    && currentUserId 
+    && recruitCount > 0 
+    && !participants.includes(userIdentifier);
+  
+  // デバッグログ（開発時のみ）
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ScheduleList] RecruitCard canJoin check:', {
+        scheduleId: schedule.id,
+        isOwnPost,
+        currentUserId,
+        currentUserName,
+        userIdentifier,
+        recruitCount,
+        participants,
+        canJoin,
+      });
+    }
+  }, [schedule.id, isOwnPost, currentUserId, currentUserName, userIdentifier, recruitCount, participants, canJoin]);
 
   useEffect(() => {
     const loadPosterName = async () => {

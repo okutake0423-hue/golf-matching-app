@@ -39,6 +39,7 @@ export default function ProfileEditPage() {
           companyName: stored?.companyName ?? '',
           averageScore: stored?.averageScore ?? null,
           playStyle: stored?.playStyle ?? '',
+          profileCheckboxes: stored?.profileCheckboxes ?? [],
         });
       } catch (err) {
         console.error(err);

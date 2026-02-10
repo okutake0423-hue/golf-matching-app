@@ -1,7 +1,7 @@
 'use client';
 
 import type { UserProfileDisplay } from '@/types/profile';
-import { PLAY_STYLE_OPTIONS } from '@/types/profile';
+import { PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS } from '@/types/profile';
 import styles from './ProfileDisplay.module.css';
 
 type Props = {
@@ -65,6 +65,21 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props
           <p className={styles.profileItem}>
             <strong>プレイスタイル:</strong> {playStyleLabel}
           </p>
+          {profile.profileCheckboxes && profile.profileCheckboxes.length > 0 && (
+            <div className={styles.profileItem}>
+              <strong>プロフィール項目:</strong>
+              <div className={styles.checkboxDisplay}>
+                {profile.profileCheckboxes.map((value) => {
+                  const option = PROFILE_CHECKBOX_OPTIONS.find((opt) => opt.value === value);
+                  return option ? (
+                    <span key={value} className={styles.checkboxBadge}>
+                      {option.label}
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
           {!hasCustomInfo && onEdit && (
             <p className={styles.hint}>
               下の「編集」ボタンから会社名・平均スコア・プレイスタイルを設定できます。

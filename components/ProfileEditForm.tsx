@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { PLAY_STYLE_OPTIONS, type UserProfileFormData } from '@/types/profile';
+import { PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, type UserProfileFormData, type ProfileCheckboxValue } from '@/types/profile';
 import styles from './ProfileEditForm.module.css';
 
 type Props = {
@@ -18,6 +18,9 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
       : ''
   );
   const [playStyle, setPlayStyle] = useState(initialData.playStyle ?? '');
+  const [profileCheckboxes, setProfileCheckboxes] = useState<ProfileCheckboxValue[]>(
+    initialData.profileCheckboxes ?? []
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +35,7 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
           averageScore:
             averageScore === '' ? null : parseInt(averageScore, 10) || null,
           playStyle,
+          profileCheckboxes,
         });
         if (onCancel) onCancel();
       } catch (err) {
@@ -40,8 +44,16 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
         setSaving(false);
       }
     },
-    [companyName, averageScore, playStyle, onSave, onCancel]
+    [companyName, averageScore, playStyle, profileCheckboxes, onSave, onCancel]
   );
+
+  const handleCheckboxChange = useCallback((value: ProfileCheckboxValue, checked: boolean) => {
+    if (checked) {
+      setProfileCheckboxes((prev) => [...prev, value]);
+    } else {
+      setProfileCheckboxes((prev) => prev.filter((v) => v !== value));
+    }
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
@@ -91,6 +103,22 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
             </option>
           ))}
         </select>
+      </div>
+      <div className={styles.field}>
+        <label className={styles.label}>プロフィール項目</label>
+        <div className={styles.checkboxGroup}>
+          {PROFILE_CHECKBOX_OPTIONS.map((option) => (
+            <label key={option.value} className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={profileCheckboxes.includes(option.value)}
+                onChange={(e) => handleCheckboxChange(option.value, e.target.checked)}
+                className={styles.checkbox}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
       </div>
       <div className={styles.actions}>
         <button

@@ -99,3 +99,20 @@
 .buttonEdit:hover {
   background-color: #555;
 }
+
+.checkboxDisplay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.checkboxBadge {
+  display: inline-block;
+  background-color: #06c755;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}

@@ -28,6 +28,7 @@ export async function getUserProfile(
     companyName: data.companyName ?? '',
     averageScore: data.averageScore ?? null,
     playStyle: data.playStyle ?? '',
+    profileCheckboxes: data.profileCheckboxes ?? [],
     updatedAt:
       data.updatedAt instanceof Timestamp
         ? data.updatedAt.toMillis()
@@ -60,6 +61,7 @@ export async function setUserProfile(
       averageScore:
         formData.averageScore != null ? Number(formData.averageScore) : null,
       playStyle: formData.playStyle,
+      profileCheckboxes: formData.profileCheckboxes ?? [],
       updatedAt: serverTimestamp(),
     },
     { merge: true }

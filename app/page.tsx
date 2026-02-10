@@ -25,6 +25,7 @@ export default function Home() {
       companyName: stored?.companyName ?? '',
       averageScore: stored?.averageScore ?? null,
       playStyle: stored?.playStyle ?? '',
+      profileCheckboxes: stored?.profileCheckboxes ?? [],
     } satisfies UserProfileDisplay;
   };
 

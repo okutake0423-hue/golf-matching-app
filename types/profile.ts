@@ -11,6 +11,19 @@ export const PLAY_STYLE_OPTIONS = [
 export type PlayStyleValue = (typeof PLAY_STYLE_OPTIONS)[number]['value'];
 
 /**
+ * プロフィールのチェックボックス項目
+ */
+export const PROFILE_CHECKBOX_OPTIONS = [
+  { value: 'company_competition', label: '社内コンペ' },
+  { value: 'md', label: 'MD' },
+  { value: 'fd', label: 'FD' },
+  { value: 'ew', label: 'EW' },
+  { value: 'pid', label: 'PID' },
+] as const;
+
+export type ProfileCheckboxValue = (typeof PROFILE_CHECKBOX_OPTIONS)[number]['value'];
+
+/**
  * Firestoreの users コレクションに保存するドキュメントの型
  * ドキュメントID = userId（LINEのユーザーID）
  */
@@ -25,6 +38,8 @@ export interface UserProfileDoc {
   averageScore: number | null;
   /** ゴルフのプレイスタイル */
   playStyle: string;
+  /** プロフィールチェックボックス項目（複数選択可能） */
+  profileCheckboxes?: ProfileCheckboxValue[];
   updatedAt: ReturnType<typeof Date.prototype.getTime>;
 }
 
@@ -39,6 +54,7 @@ export interface UserProfileDisplay {
   companyName: string;
   averageScore: number | null;
   playStyle: string;
+  profileCheckboxes?: ProfileCheckboxValue[];
 }
 
 /**
@@ -48,4 +64,5 @@ export interface UserProfileFormData {
   companyName: string;
   averageScore: number | null;
   playStyle: string;
+  profileCheckboxes?: ProfileCheckboxValue[];
 }
