@@ -9,10 +9,12 @@ type Props = {
   schedules: ScheduleDoc[];
   dateLabel?: string;
   currentUserId?: string | null;
+  currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
+  onJoin?: (scheduleId: string) => Promise<void>;
 };
 
-export function ScheduleList({ schedules, dateLabel, currentUserId, onDelete }: Props) {
+export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin }: Props) {
   if (schedules.length === 0) {
     return (
       <div className={styles.empty}>
@@ -29,7 +31,9 @@ export function ScheduleList({ schedules, dateLabel, currentUserId, onDelete }: 
             <RecruitCard
               schedule={s as ScheduleRecruit}
               currentUserId={currentUserId}
+              currentUserName={currentUserName}
               onDelete={onDelete}
+              onJoin={onJoin}
             />
           ) : (
             <WishCard
@@ -47,19 +51,25 @@ export function ScheduleList({ schedules, dateLabel, currentUserId, onDelete }: 
 function RecruitCard({
   schedule,
   currentUserId,
+  currentUserName,
   onDelete,
+  onJoin,
 }: {
   schedule: ScheduleRecruit;
   currentUserId?: string | null;
+  currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
+  onJoin?: (scheduleId: string) => Promise<void>;
 }) {
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const participants = schedule.participants ?? [];
   const playFee = Number(schedule.playFee) || 0;
   const recruitCount = Number(schedule.recruitCount) || 0;
   const isOwnPost = currentUserId === schedule.posterId;
   const isCompetition = schedule.isCompetition ?? false;
+  const canJoin = !isOwnPost && currentUserId && currentUserName && recruitCount > 0 && !participants.includes(currentUserName);
 
   useEffect(() => {
     const loadPosterName = async () => {
@@ -85,6 +95,20 @@ function RecruitCard({
       alert('削除に失敗しました');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleJoin = async () => {
+    if (!schedule.id || !onJoin || !canJoin) return;
+    if (!confirm('この予定に参加しますか？')) return;
+    setIsJoining(true);
+    try {
+      await onJoin(schedule.id);
+    } catch (err) {
+      console.error('Failed to join schedule:', err);
+      alert(err instanceof Error ? err.message : '参加に失敗しました');
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -119,6 +143,16 @@ function RecruitCard({
         <p className={styles.participants}>
           参加: {participants.join(', ')}
         </p>
+      )}
+      {canJoin && (
+        <button
+          type="button"
+          onClick={handleJoin}
+          disabled={isJoining}
+          className={styles.joinButton}
+        >
+          {isJoining ? '参加中...' : '参加'}
+        </button>
       )}
     </div>
   );

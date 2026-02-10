@@ -21,6 +21,7 @@
 - **プロフィール表示** … LINE の表示名・アイコンに加え、アプリ独自項目（会社名・平均スコア・プレイスタイル）を表示
 - **プロフィール編集** … 上記独自項目の入力・保存（Firestore の `users` コレクションに `userId` をドキュメントIDとして保存）
 - **ゴルフ予定** … 募集モード（日時・コース・プレーフィー・募集人数）と希望モード（希望日・コース/地域・上限プレーフィー）の投稿、カレンダー表示、月別・日別一覧（Firestore の `schedules` コレクション）
+- **参加機能** … 募集された予定に参加ボタンで参加、残り人数の自動更新、参加者名の表示、オーナーへのLINE通知（任意）
 - **Firebase 連携** … LIFF の ID トークン検証後、カスタムトークンで Firebase 認証（API Route で実装）
 
 ---
@@ -30,8 +31,11 @@
 ```
 GolfMachingApp/
 ├── app/
-│   ├── api/auth/line/     # LINE IDトークン → Firebase カスタムトークン API
+│   ├── api/
+│   │   ├── auth/line/     # LINE IDトークン → Firebase カスタムトークン API
+│   │   └── notify/line/    # LINE通知API（参加通知）
 │   ├── profile/edit/      # プロフィール編集ページ
+│   ├── schedules/         # 予定ページ
 │   ├── layout.tsx
 │   ├── page.tsx           # トップ（ログイン / プロフィール表示）
 │   └── globals.css
@@ -79,6 +83,7 @@ Copy-Item .env.example .env.local
 | `FIREBASE_ADMIN_PROJECT_ID` | Firebase プロジェクト ID | 上記と同じ |
 | `FIREBASE_ADMIN_CLIENT_EMAIL` | サービスアカウントのメール | Firebase → プロジェクトの設定 → サービスアカウント → 秘密鍵 JSON の `client_email` |
 | `FIREBASE_ADMIN_PRIVATE_KEY` | 秘密鍵（改行は `\n`、全体を `"` で囲む） | 上記 JSON の `private_key` |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE通知用のチャネルアクセストークン（任意） | LINE Developers Console → チャネル → Messaging API → チャネルアクセストークン（長期） |
 
 ### 3. LINE Developers（LIFF）
 
@@ -88,6 +93,17 @@ Copy-Item .env.example .env.local
    - スコープ: `profile`, `openid`
    - エンドポイント URL: 開発時は `http://localhost:3000`、本番は Vercel の URL
 3. 発行された **LIFF ID** を `NEXT_PUBLIC_LIFF_ID` に設定
+
+#### LINE通知の設定（任意）
+
+募集に参加された際にオーナーへ通知を送る場合は、以下を設定します：
+
+1. LINE Developers Console → チャネル → **Messaging API** タブ
+2. **チャネルアクセストークン（長期）** を発行
+3. 発行されたトークンを `LINE_CHANNEL_ACCESS_TOKEN` に設定
+4. **Webhook URL** は設定不要（プッシュメッセージのみ使用）
+
+**注意**: 通知機能を使用しない場合は、`LINE_CHANNEL_ACCESS_TOKEN` を設定しなくても動作します（通知は送信されません）。
 
 ### 4. Firebase
 

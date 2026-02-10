@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
-import { getSchedulesByMonth, addSchedule, deleteSchedule } from '@/lib/firestore-schedules';
+import { getSchedulesByMonth, addSchedule, deleteSchedule, joinSchedule } from '@/lib/firestore-schedules';
 import { ScheduleList } from '@/components/ScheduleList';
 import { ScheduleForm } from '@/components/ScheduleForm';
-import type { ScheduleDoc, ScheduleFormData } from '@/types/schedule';
+import type { ScheduleDoc, ScheduleFormData, ScheduleRecruit } from '@/types/schedule';
 import { getMonthKey } from '@/types/schedule';
 import styles from './schedules.module.css';
 
@@ -29,6 +29,7 @@ function toDateStr(d: Date): string {
 export default function SchedulesPage() {
   const [ready, setReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [schedules, setSchedules] = useState<ScheduleDoc[]>([]);
   const [monthKey, setMonthKey] = useState(() => {
     const d = new Date();
@@ -65,6 +66,7 @@ export default function SchedulesPage() {
         }
         const profile = await getProfile();
         setUserId(profile?.userId ?? null);
+        setUserName(profile?.displayName ?? null);
       } catch (e) {
         console.error('Schedules init error:', e);
       } finally {
@@ -104,6 +106,54 @@ export default function SchedulesPage() {
       }
     },
     [monthKey, loadSchedules]
+  );
+
+  const handleJoin = useCallback(
+    async (scheduleId: string) => {
+      if (!userId || !userName) {
+        alert('ログインしてください');
+        return;
+      }
+
+      try {
+        // 参加処理
+        const result = await joinSchedule(scheduleId, userName);
+        
+        // 参加した予定の情報を取得してLINE通知を送信
+        const schedule = schedules.find((s) => s.id === scheduleId) as ScheduleRecruit | undefined;
+        if (schedule && schedule.type === 'RECRUIT') {
+          try {
+            await fetch('/api/notify/line', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ownerUserId: schedule.posterId,
+                participantName: userName,
+                scheduleInfo: {
+                  dateStr: schedule.dateStr,
+                  startTime: schedule.startTime,
+                  golfCourseName: schedule.golfCourseName,
+                  remainingCount: result.remainingCount,
+                },
+              }),
+            });
+          } catch (notifyErr) {
+            console.error('LINE通知の送信に失敗しました:', notifyErr);
+            // 通知失敗でも参加処理は成功とする
+          }
+        }
+        
+        // 予定一覧を再読み込み
+        await loadSchedules(monthKey);
+        alert('参加しました！');
+      } catch (err) {
+        console.error('Failed to join schedule:', err);
+        const errorMessage = err instanceof Error ? err.message : '参加に失敗しました';
+        setError(errorMessage);
+        alert(errorMessage);
+      }
+    },
+    [userId, userName, schedules, monthKey, loadSchedules]
   );
 
   const listSchedules = selectedDate
@@ -171,7 +221,9 @@ export default function SchedulesPage() {
               schedules={listSchedules}
               dateLabel={dateLabel}
               currentUserId={userId}
+              currentUserName={userName}
               onDelete={handleDelete}
+              onJoin={handleJoin}
             />
           )}
         </section>

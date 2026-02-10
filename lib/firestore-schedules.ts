@@ -9,6 +9,8 @@ import {
   Timestamp,
   doc,
   deleteDoc,
+  getDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type {
@@ -192,4 +194,51 @@ export async function getSchedulesByDate(
 export async function deleteSchedule(scheduleId: string): Promise<void> {
   const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
   await deleteDoc(ref);
+}
+
+/**
+ * 募集に参加する（残り人数を減らし、参加者に表示名を追加）
+ */
+export async function joinSchedule(
+  scheduleId: string,
+  participantDisplayName: string
+): Promise<{ success: boolean; remainingCount: number }> {
+  const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
+  const snap = await getDoc(ref);
+  
+  if (!snap.exists()) {
+    throw new Error('予定が見つかりません');
+  }
+  
+  const data = snap.data();
+  if (data.type !== 'RECRUIT') {
+    throw new Error('募集タイプの予定のみ参加できます');
+  }
+  
+  const currentParticipants = data.participants ?? [];
+  const currentRecruitCount = Number(data.recruitCount) || 0;
+  
+  // 既に参加している場合はエラー
+  if (currentParticipants.includes(participantDisplayName)) {
+    throw new Error('既に参加しています');
+  }
+  
+  // 残り人数が0の場合はエラー
+  if (currentRecruitCount <= 0) {
+    throw new Error('募集人数に達しています');
+  }
+  
+  // 参加者を追加し、残り人数を減らす
+  const newParticipants = [...currentParticipants, participantDisplayName];
+  const newRecruitCount = currentRecruitCount - 1;
+  
+  await updateDoc(ref, {
+    participants: newParticipants,
+    recruitCount: newRecruitCount,
+  });
+  
+  return {
+    success: true,
+    remainingCount: newRecruitCount,
+  };
 }
