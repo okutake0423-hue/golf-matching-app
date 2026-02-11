@@ -101,16 +101,65 @@ export default function NotifyPage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '通知の送信に失敗しました');
+        let error;
+        try {
+          error = await response.json();
+        } catch (e) {
+          error = { message: `サーバーエラー (${response.status})` };
+        }
+        
+        const errorMessage = error.message || '通知の送信に失敗しました';
+        console.error('[NotifyPage] APIエラー:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: error,
+        });
+        
+        // 詳細なエラー情報を表示
+        let displayMessage = errorMessage;
+        if (error.details) {
+          console.error('[NotifyPage] エラー詳細:', error.details);
+        }
+        if (error.missingVariables && error.missingVariables.length > 0) {
+          displayMessage = `${errorMessage}\n\n不足している環境変数: ${error.missingVariables.join(', ')}`;
+        }
+        
+        throw new Error(displayMessage);
       }
 
       const result = await response.json();
-      alert(`${result.sentCount}件の通知を送信しました`);
+      
+      if (result.sent === false) {
+        if (result.message) {
+          alert(result.message);
+        } else {
+          alert('通知の送信に失敗しました。詳細はコンソールを確認してください。');
+        }
+        console.error('通知送信結果:', result);
+        return;
+      }
+      
+      if (result.errors && result.errors.length > 0) {
+        console.warn('一部の通知送信に失敗:', result.errors);
+        alert(`${result.sentCount}件の通知を送信しました（一部失敗: ${result.errors.length}件）`);
+      } else {
+        alert(`${result.sentCount}件の通知を送信しました`);
+      }
+      
       router.push('/schedules');
     } catch (err) {
-      console.error('Failed to send notifications:', err);
-      setError(err instanceof Error ? err.message : '通知の送信に失敗しました');
+      console.error('[NotifyPage] 通知送信エラー:', err);
+      let errorMessage = '通知の送信に失敗しました';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        // APIから返された詳細なエラー情報を表示
+        if (err.message.includes('Firebase Admin SDK')) {
+          errorMessage = `${err.message}\n\nVercelの環境変数に FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY が設定されているか確認してください。`;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSending(false);
     }

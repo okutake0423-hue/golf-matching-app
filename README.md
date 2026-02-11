@@ -413,6 +413,72 @@ git push origin main
 
 ---
 
+### `Firebase Admin SDKの設定が見つかりません`
+
+**原因**: Vercel に Firebase Admin SDK 用の環境変数が設定されていません。通知機能を使用する場合に必要です。
+
+**対処**:
+
+1. Vercel ダッシュボード → 対象プロジェクト → **Settings** → **Environment Variables**
+2. 次の変数が **すべて** 設定されているか確認（Production / Preview にチェック）:
+   - `FIREBASE_ADMIN_PROJECT_ID` - Firebase プロジェクト ID（例: `golf-matching-app`）
+   - `FIREBASE_ADMIN_CLIENT_EMAIL` - サービスアカウントのメールアドレス（例: `firebase-adminsdk-xxxxx@golf-matching-app.iam.gserviceaccount.com`）
+   - `FIREBASE_ADMIN_PRIVATE_KEY` - サービスアカウントの秘密鍵（改行文字 `\n` を含む、全体をダブルクォートで囲む）
+3. 値の取得方法:
+   - Firebase Console → **プロジェクトの設定** → **サービスアカウント**
+   - 「新しい秘密鍵の生成」をクリック
+   - JSONファイルがダウンロードされる
+   - JSONファイルから以下を取得:
+     - `project_id` → `FIREBASE_ADMIN_PROJECT_ID`
+     - `client_email` → `FIREBASE_ADMIN_CLIENT_EMAIL`
+     - `private_key` → `FIREBASE_ADMIN_PRIVATE_KEY`（**重要**: 改行文字 `\n` をそのまま含める。全体をダブルクォート `"` で囲む）
+4. **保存** したあと、**Deployments** → 最新の **⋯** → **Redeploy** を実行
+
+**注意**: `FIREBASE_ADMIN_PRIVATE_KEY` は改行文字を含むため、Vercelの環境変数設定画面で値を貼り付ける際は、**全体をダブルクォートで囲んでください**。
+
+---
+
+### `Cannot find module '@opentelemetry'` または `Bulk notify API error: Error: Cannot find module '@opentele'`
+
+**原因**: Vercelのビルド時に`firebase-admin`の依存関係（`@opentelemetry/api`）が正しくインストールされていません。
+
+**対処**:
+
+1. **`package.json`を確認**: `@opentelemetry/api`が`dependencies`に含まれているか確認してください。
+   ```json
+   "dependencies": {
+     "@opentelemetry/api": "^1.8.0",
+     "firebase-admin": "^12.4.0",
+     ...
+   }
+   ```
+
+2. **変更をコミット・プッシュ**:
+   ```bash
+   git add package.json
+   git commit -m "Add @opentelemetry/api dependency"
+   git push
+   ```
+
+3. **Vercelで再デプロイ**: 
+   - Vercel ダッシュボード → プロジェクト → **Deployments** タブ
+   - 最新のデプロイが完了するまで待つ（**Building** → **Ready**）
+
+4. **まだエラーが出る場合**:
+   - Vercel ダッシュボード → プロジェクト → **Settings** → **General**
+   - **Node.js Version** が **18.x** または **20.x** に設定されているか確認
+   - 必要に応じて **20.x** に変更して再デプロイ
+
+5. **ローカルで確認**:
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   npm run build
+   ```
+   ローカルでビルドが成功することを確認してから、Vercelにプッシュしてください。
+
+---
+
 ### `Content Security Policy ... blocks the use of 'eval'` または `Loading the script 'https://static.line-scdn.net/...' violates CSP`
 
 **原因**: Content Security Policy (CSP) が、Next.js / react-calendar / Firebase の `eval` や、LIFF SDK が読み込む LINE の CDN スクリプトをブロックしています。
