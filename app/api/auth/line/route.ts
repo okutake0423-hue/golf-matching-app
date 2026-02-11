@@ -38,7 +38,23 @@ export async function POST(request: NextRequest) {
 
     const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    // 秘密鍵の改行文字を正しく処理
+    // Vercelの環境変数では、改行が \n という文字列として保存されている可能性があるため、
+    // 複数のパターンを試す
+    let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    if (privateKey) {
+      // まず、\\n を実際の改行に変換
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      // もし改行が含まれていない場合（Vercelで改行が失われた場合）、
+      // BEGIN PRIVATE KEY と END PRIVATE KEY の間で改行を追加
+      if (!privateKey.includes('\n') && privateKey.includes('BEGIN PRIVATE KEY') && privateKey.includes('END PRIVATE KEY')) {
+        privateKey = privateKey
+          .replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
+          .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
+          .replace(/\s+/g, '\n');
+      }
+    }
 
     if (!projectId || !clientEmail || !privateKey) {
       return NextResponse.json(

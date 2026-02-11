@@ -46,7 +46,23 @@ export async function POST(request: NextRequest) {
     // Firebase Admin SDKを初期化
     const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    // 秘密鍵の改行文字を正しく処理
+    // Vercelの環境変数では、改行が \n という文字列として保存されている可能性があるため、
+    // 複数のパターンを試す
+    let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    if (privateKey) {
+      // まず、\\n を実際の改行に変換
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      // もし改行が含まれていない場合（Vercelで改行が失われた場合）、
+      // BEGIN PRIVATE KEY と END PRIVATE KEY の間で改行を追加
+      if (!privateKey.includes('\n') && privateKey.includes('BEGIN PRIVATE KEY') && privateKey.includes('END PRIVATE KEY')) {
+        privateKey = privateKey
+          .replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
+          .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
+          .replace(/\s+/g, '\n');
+      }
+    }
 
     console.log('[Bulk Notify] Firebase Admin SDK設定確認:', {
       hasProjectId: !!projectId,
@@ -54,6 +70,9 @@ export async function POST(request: NextRequest) {
       hasPrivateKey: !!privateKey,
       projectId: projectId || '未設定',
       clientEmail: clientEmail ? `${clientEmail.substring(0, 20)}...` : '未設定',
+      privateKeyLength: privateKey?.length || 0,
+      privateKeyStartsWith: privateKey?.substring(0, 30) || '未設定',
+      privateKeyHasNewlines: privateKey?.includes('\n') || false,
     });
 
     if (!projectId || !clientEmail || !privateKey) {
@@ -103,6 +122,11 @@ export async function POST(request: NextRequest) {
 
     if (!admin.apps.length) {
       try {
+        // 秘密鍵の形式を検証
+        if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+          throw new Error('秘密鍵の形式が正しくありません。BEGIN PRIVATE KEY と END PRIVATE KEY が含まれている必要があります。');
+        }
+        
         admin.initializeApp({
           credential: admin.credential.cert({
             projectId,
@@ -112,11 +136,27 @@ export async function POST(request: NextRequest) {
         });
         console.log('[Bulk Notify] Firebase Admin SDK初期化成功');
       } catch (initError) {
+        const errorMessage = initError instanceof Error ? initError.message : String(initError);
         console.error('[Bulk Notify] Firebase Admin SDK初期化エラー:', {
-          error: initError instanceof Error ? initError.message : String(initError),
+          error: errorMessage,
           stack: initError instanceof Error ? initError.stack : undefined,
+          privateKeyPreview: privateKey?.substring(0, 50) + '...',
         });
-        throw new Error(`Firebase Admin SDKの初期化に失敗しました: ${initError instanceof Error ? initError.message : String(initError)}`);
+        
+        // DECODER routines エラーの場合の特別なメッセージ
+        if (errorMessage.includes('DECODER') || errorMessage.includes('unsupported') || errorMessage.includes('1E08010C')) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `秘密鍵のデコードに失敗しました。Vercelの環境変数 FIREBASE_ADMIN_PRIVATE_KEY の設定を確認してください。\n\nエラー: ${errorMessage}\n\n対処方法:\n1. Firebase Console → プロジェクトの設定 → サービスアカウント → 「新しい秘密鍵の生成」\n2. ダウンロードしたJSONファイルの private_key の値をコピー\n3. Vercelの環境変数に、全体をダブルクォートで囲んで貼り付け（改行文字 \\n を含む）\n4. Redeployを実行`,
+              error: errorMessage,
+              requiresPrivateKeyFix: true,
+            },
+            { status: 500 }
+          );
+        }
+        
+        throw new Error(`Firebase Admin SDKの初期化に失敗しました: ${errorMessage}`);
       }
     }
 

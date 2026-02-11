@@ -438,6 +438,49 @@ git push origin main
 
 ---
 
+### `error:1E08010C:DECODER routines::unsupported` または `Getting metadata from plugin failed with error`
+
+**原因**: Firebase Admin SDKの秘密鍵（`FIREBASE_ADMIN_PRIVATE_KEY`）のデコードに失敗しています。通常、Vercelの環境変数で改行文字が正しく保存されていない場合に発生します。
+
+**対処**:
+
+1. **Firebase Consoleから新しい秘密鍵を生成**:
+   - Firebase Console → **プロジェクトの設定** → **サービスアカウント**
+   - 「新しい秘密鍵の生成」をクリック
+   - JSONファイルがダウンロードされる
+
+2. **JSONファイルから`private_key`を取得**:
+   - ダウンロードしたJSONファイルを開く
+   - `private_key`フィールドの値をコピー（**全体**をコピー、改行を含む）
+
+3. **Vercelの環境変数を再設定**:
+   - Vercel ダッシュボード → プロジェクト → **Settings** → **Environment Variables**
+   - `FIREBASE_ADMIN_PRIVATE_KEY`を選択（または新規作成）
+   - **重要**: 値を貼り付ける際、**全体をダブルクォートで囲む**
+   - 例:
+     ```
+     "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----\n"
+     ```
+   - 改行文字は `\n` という**文字列**として入力（実際の改行ではない）
+
+4. **他の環境変数も確認**:
+   - `FIREBASE_ADMIN_PROJECT_ID` - JSONファイルの`project_id`
+   - `FIREBASE_ADMIN_CLIENT_EMAIL` - JSONファイルの`client_email`
+
+5. **保存して再デプロイ**:
+   - **Save**をクリック
+   - **Deployments** → 最新のデプロイ → **⋯** → **Redeploy**
+
+6. **まだエラーが出る場合**:
+   - Vercelの環境変数設定画面で、`FIREBASE_ADMIN_PRIVATE_KEY`の値を確認
+   - `BEGIN PRIVATE KEY`と`END PRIVATE KEY`が含まれているか確認
+   - 改行文字（`\n`）が文字列として含まれているか確認
+   - 全体がダブルクォートで囲まれているか確認
+
+**注意**: Vercelの環境変数設定画面では、改行を直接入力できないため、`\n`という文字列として入力する必要があります。コード側で`\n`を実際の改行に変換します。
+
+---
+
 ### `Cannot find module '@opentelemetry'` または `Bulk notify API error: Error: Cannot find module '@opentele'`
 
 **原因**: Vercelのビルド時に`firebase-admin`の依存関係（`@opentelemetry/api`）が正しくインストールされていません。
