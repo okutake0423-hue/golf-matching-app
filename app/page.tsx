@@ -72,13 +72,31 @@ export default function Home() {
   const handleLogin = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
+      // LIFFのログインを実行（リダイレクトが発生する可能性がある）
       await login();
-      const lineProfile = await getProfile();
-      const merged = await loadMergedProfile(lineProfile);
-      setProfile(merged);
+      
+      // ログイン後、少し待ってからログイン状態を確認
+      // LIFFのlogin()はリダイレクトを伴うため、このコードに到達しない可能性がある
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // ログイン状態を確認
+      if (isLoggedIn()) {
+        const lineProfile = await getProfile();
+        const merged = await loadMergedProfile(lineProfile);
+        setProfile(merged);
+      } else {
+        // ログインが完了していない場合、ページをリロードして再試行
+        // LIFFのログインフローは通常リダイレクトを伴うため、
+        // この時点でログインが完了していない場合は、リダイレクトが発生していない可能性がある
+        console.warn('[App] ログイン後もログイン状態がfalseです。ページをリロードします。');
+        window.location.reload();
+      }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('ログインに失敗しました');
+      console.error('[App] Login error:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`ログインに失敗しました: ${errorMessage}\n\nブラウザのコンソール（F12 → Console）に詳細なエラー情報が表示されています。`);
     } finally {
       setIsLoading(false);
     }

@@ -91,7 +91,19 @@ export const login = async (): Promise<void> => {
     throw new Error('LIFF is not initialized');
   }
   if (!liffInstance.isLoggedIn()) {
-    liffInstance.login();
+    try {
+      liffInstance.login();
+      // login()はリダイレクトを伴う可能性があるため、ここに到達しない場合がある
+      // リダイレクトが発生しない場合、少し待ってからログイン状態を確認
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!liffInstance.isLoggedIn()) {
+        throw new Error('ログインが完了しませんでした。LINEアプリから再度お試しください。');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[LIFF] ログインエラー:', error);
+      throw new Error(`ログインに失敗しました: ${message}`);
+    }
   }
 };
 
