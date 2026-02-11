@@ -7,10 +7,8 @@ import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
 import { getSchedulesByMonth, addSchedule, deleteSchedule, joinSchedule } from '@/lib/firestore-schedules';
 import { ScheduleList } from '@/components/ScheduleList';
 import { ScheduleForm } from '@/components/ScheduleForm';
-import { NotifyModal } from '@/components/NotifyModal';
-import type { ScheduleDoc, ScheduleFormData, ScheduleRecruit } from '@/types/schedule';
+import type { ScheduleDoc, ScheduleFormData } from '@/types/schedule';
 import { getMonthKey } from '@/types/schedule';
-import type { ProfileCheckboxValue } from '@/types/profile';
 import styles from './schedules.module.css';
 
 const ScheduleCalendar = dynamic(
@@ -40,7 +38,6 @@ export default function SchedulesPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notifyScheduleId, setNotifyScheduleId] = useState<string | null>(null);
 
   const loadSchedules = useCallback(async (key: string) => {
     setLoading(true);
@@ -162,77 +159,6 @@ export default function SchedulesPage() {
     [userId, userName, schedules, monthKey, loadSchedules]
   );
 
-  const handleNotify = useCallback(
-    (scheduleId: string) => {
-      console.log('[SchedulesPage] handleNotify called with scheduleId:', scheduleId);
-      setNotifyScheduleId(scheduleId);
-      console.log('[SchedulesPage] notifyScheduleId set to:', scheduleId);
-    },
-    []
-  );
-
-  const handleSendNotify = useCallback(
-    async (selectedCheckboxes: ProfileCheckboxValue[]) => {
-      if (!notifyScheduleId) return;
-
-      const schedule = schedules.find((s) => s.id === notifyScheduleId) as ScheduleRecruit | undefined;
-      if (!schedule || schedule.type !== 'RECRUIT') {
-        throw new Error('予定が見つかりません');
-      }
-
-      try {
-        const response = await fetch('/api/notify/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            profileCheckboxes: selectedCheckboxes,
-            scheduleInfo: {
-              dateStr: schedule.dateStr,
-              startTime: schedule.startTime,
-              golfCourseName: schedule.golfCourseName,
-              isCompetition: schedule.isCompetition ?? false,
-              competitionName: schedule.competitionName,
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || '通知の送信に失敗しました');
-        }
-
-        const result = await response.json();
-        alert(`${result.sentCount}件の通知を送信しました`);
-      } catch (err) {
-        console.error('Failed to send notifications:', err);
-        throw err;
-      }
-    },
-    [notifyScheduleId, schedules]
-  );
-
-  const handleCloseNotify = useCallback(() => {
-    setNotifyScheduleId(null);
-  }, []);
-
-  const notifySchedule = schedules.find((s) => s.id === notifyScheduleId) as ScheduleRecruit | undefined;
-
-  // デバッグログ
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[SchedulesPage] notifyScheduleId:', notifyScheduleId);
-      console.log('[SchedulesPage] notifySchedule:', notifySchedule);
-      console.log('[SchedulesPage] schedules count:', schedules.length);
-      console.log('[SchedulesPage] schedule IDs:', schedules.map((s) => s.id));
-      if (notifyScheduleId && !notifySchedule) {
-        console.warn('[SchedulesPage] notifyScheduleId exists but schedule not found!', {
-          notifyScheduleId,
-          availableIds: schedules.map((s) => s.id),
-        });
-      }
-    }
-  }, [notifyScheduleId, notifySchedule, schedules]);
-
   const listSchedules = selectedDate
     ? schedules.filter((s) => s.dateStr === toDateStr(selectedDate))
     : schedules;
@@ -316,26 +242,6 @@ export default function SchedulesPage() {
           />
         </section>
       </main>
-      {notifyScheduleId && notifySchedule ? (
-        <NotifyModal
-          scheduleInfo={{
-            dateStr: notifySchedule.dateStr,
-            startTime: notifySchedule.startTime,
-            golfCourseName: notifySchedule.golfCourseName,
-            isCompetition: notifySchedule.isCompetition ?? false,
-            competitionName: notifySchedule.competitionName,
-          }}
-          onSend={handleSendNotify}
-          onClose={handleCloseNotify}
-        />
-      ) : notifyScheduleId ? (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
-            <p>予定情報を読み込み中...</p>
-            <button onClick={handleCloseNotify}>閉じる</button>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

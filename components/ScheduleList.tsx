@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ScheduleDoc, ScheduleRecruit, ScheduleWish } from '@/types/schedule';
 import { getUserProfile } from '@/lib/firestore';
 import styles from './ScheduleList.module.css';
@@ -12,10 +13,9 @@ type Props = {
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
-  onNotify?: (scheduleId: string) => void;
 };
 
-export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin, onNotify }: Props) {
+export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserName, onDelete, onJoin }: Props) {
   if (schedules.length === 0) {
     return (
       <div className={styles.empty}>
@@ -35,7 +35,6 @@ export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserN
               currentUserName={currentUserName}
               onDelete={onDelete}
               onJoin={onJoin}
-              onNotify={onNotify}
             />
           ) : (
             <WishCard
@@ -140,15 +139,8 @@ function RecruitCard({
   };
 
   const handleNotify = () => {
-    if (!schedule.id || !onNotify) {
-      console.log('[ScheduleList] handleNotify: missing schedule.id or onNotify', {
-        scheduleId: schedule.id,
-        hasOnNotify: !!onNotify,
-      });
-      return;
-    }
-    console.log('[ScheduleList] handleNotify: calling onNotify with scheduleId', schedule.id);
-    onNotify(schedule.id);
+    if (!schedule.id) return;
+    router.push(`/schedules/${schedule.id}/notify`);
   };
 
   return (
