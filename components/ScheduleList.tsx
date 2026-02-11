@@ -55,15 +55,14 @@ function RecruitCard({
   currentUserName,
   onDelete,
   onJoin,
-  onNotify,
 }: {
   schedule: ScheduleRecruit;
   currentUserId?: string | null;
   currentUserName?: string | null;
   onDelete?: (scheduleId: string) => Promise<void>;
   onJoin?: (scheduleId: string) => Promise<void>;
-  onNotify?: (scheduleId: string) => void;
 }) {
+  const router = useRouter();
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
