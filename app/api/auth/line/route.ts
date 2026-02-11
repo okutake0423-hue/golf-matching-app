@@ -40,19 +40,29 @@ export async function POST(request: NextRequest) {
     const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
     
     // 秘密鍵の改行文字を正しく処理
-    // Vercelの環境変数では、改行が \n という文字列として保存されている可能性があるため、
-    // 複数のパターンを試す
+    // .env.localでは実際の改行が含まれる場合と、\nという文字列の場合がある
+    // Vercelの環境変数では、\n という文字列として保存されている
     let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
     if (privateKey) {
-      // まず、\\n を実際の改行に変換
+      // ダブルクォートを削除（.env.localでダブルクォートで囲まれている場合）
+      privateKey = privateKey.trim();
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      if (privateKey.startsWith("'") && privateKey.endsWith("'")) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      
+      // \\n を実際の改行に変換（Vercel環境変数やエスケープされた場合）
       privateKey = privateKey.replace(/\\n/g, '\n');
+      
       // もし改行が含まれていない場合（Vercelで改行が失われた場合）、
       // BEGIN PRIVATE KEY と END PRIVATE KEY の間で改行を追加
       if (!privateKey.includes('\n') && privateKey.includes('BEGIN PRIVATE KEY') && privateKey.includes('END PRIVATE KEY')) {
-        privateKey = privateKey
-          .replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
-          .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
-          .replace(/\s+/g, '\n');
+        // BEGIN PRIVATE KEYの後に改行を追加
+        privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n');
+        // END PRIVATE KEYの前に改行を追加
+        privateKey = privateKey.replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
       }
     }
 
