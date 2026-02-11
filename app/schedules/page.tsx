@@ -7,7 +7,7 @@ import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
 import { getSchedulesByMonth, addSchedule, deleteSchedule, joinSchedule } from '@/lib/firestore-schedules';
 import { ScheduleList } from '@/components/ScheduleList';
 import { ScheduleForm } from '@/components/ScheduleForm';
-import type { ScheduleDoc, ScheduleFormData } from '@/types/schedule';
+import type { ScheduleDoc, ScheduleFormData, ScheduleRecruit } from '@/types/schedule';
 import { getMonthKey } from '@/types/schedule';
 import styles from './schedules.module.css';
 
