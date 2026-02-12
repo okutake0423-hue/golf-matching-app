@@ -221,7 +221,7 @@ export async function joinSchedule(
   
   // 既に参加している場合はエラー
   // 「userId:displayName」形式または「displayName」形式に対応
-  const isAlreadyJoined = currentParticipants.some(p => {
+  const isAlreadyJoined = currentParticipants.some((p: string) => {
     const parts = p.split(':');
     if (parts.length === 2) {
       // 「userId:displayName」形式の場合、userIdまたはdisplayNameで判定
