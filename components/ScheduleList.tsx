@@ -199,7 +199,12 @@ function RecruitCard({
           </button>
         </>
       )}
-      <p className={styles.posterName}>投稿者: {posterName || '読み込み中...'}</p>
+      <p className={styles.posterName}>
+        投稿者:{' '}
+        <Link href={`/profile/${schedule.posterId}`} className={styles.profileLink}>
+          {posterName || '読み込み中...'}
+        </Link>
+      </p>
       <p className={styles.dateTime}>
         {schedule.dateStr ?? ''} {schedule.startTime ?? ''}
       </p>
