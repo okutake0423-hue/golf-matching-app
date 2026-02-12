@@ -245,13 +245,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 通知メッセージを作成
+    const appUrl = 'https://golf-matching-app.vercel.app/';
     const scheduleText = scheduleInfo.isCompetition && scheduleInfo.competitionName
       ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\nコース: ${scheduleInfo.golfCourseName}`
       : `日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\nコース: ${scheduleInfo.golfCourseName}`;
 
     const message = {
       type: 'text',
-      text: `新しいゴルフ予定が投稿されました！\n\n${scheduleText}\n\n詳細はアプリでご確認ください。`,
+      text: `新しいゴルフ予定が投稿されました！\n\n${scheduleText}\n\nアプリ: ${appUrl}`,
     };
 
     // 複数ユーザーにLINE通知を送信
