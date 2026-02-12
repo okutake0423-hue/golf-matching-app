@@ -197,11 +197,12 @@ export async function deleteSchedule(scheduleId: string): Promise<void> {
 }
 
 /**
- * 募集に参加する（残り人数を減らし、参加者に表示名を追加）
+ * 募集に参加する（残り人数を減らし、参加者に表示名とユーザーIDを追加）
  */
 export async function joinSchedule(
   scheduleId: string,
-  participantDisplayName: string
+  participantDisplayName: string,
+  participantUserId?: string
 ): Promise<{ success: boolean; remainingCount: number }> {
   const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
   const snap = await getDoc(ref);
@@ -219,7 +220,19 @@ export async function joinSchedule(
   const currentRecruitCount = Number(data.recruitCount) || 0;
   
   // 既に参加している場合はエラー
-  if (currentParticipants.includes(participantDisplayName)) {
+  // 「userId:displayName」形式または「displayName」形式に対応
+  const isAlreadyJoined = currentParticipants.some(p => {
+    const parts = p.split(':');
+    if (parts.length === 2) {
+      // 「userId:displayName」形式の場合、userIdまたはdisplayNameで判定
+      return parts[0] === participantUserId || parts[1] === participantDisplayName;
+    } else {
+      // 「displayName」形式の場合、displayNameで判定
+      return p === participantDisplayName;
+    }
+  });
+  
+  if (isAlreadyJoined) {
     throw new Error('既に参加しています');
   }
   
@@ -229,7 +242,11 @@ export async function joinSchedule(
   }
   
   // 参加者を追加し、残り人数を減らす
-  const newParticipants = [...currentParticipants, participantDisplayName];
+  // ユーザーIDがある場合は「userId:displayName」形式で保存、ない場合は表示名のみ
+  const participantEntry = participantUserId 
+    ? `${participantUserId}:${participantDisplayName}`
+    : participantDisplayName;
+  const newParticipants = [...currentParticipants, participantEntry];
   const newRecruitCount = currentRecruitCount - 1;
   
   await updateDoc(ref, {

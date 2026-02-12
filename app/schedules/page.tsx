@@ -119,8 +119,8 @@ export default function SchedulesPage() {
       const participantName = userName || userId;
 
       try {
-        // 参加処理
-        const result = await joinSchedule(scheduleId, participantName);
+        // 参加処理（ユーザーIDも渡す）
+        const result = await joinSchedule(scheduleId, participantName, userId || undefined);
         
         // 参加した予定の情報を取得してLINE通知を送信
         const schedule = schedules.find((s) => s.id === scheduleId) as ScheduleRecruit | undefined;

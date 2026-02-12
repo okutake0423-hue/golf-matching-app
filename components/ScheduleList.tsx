@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { ScheduleDoc, ScheduleRecruit, ScheduleWish } from '@/types/schedule';
 import { getUserProfile } from '@/lib/firestore';
 import styles from './ScheduleList.module.css';
@@ -49,6 +50,25 @@ export function ScheduleList({ schedules, dateLabel, currentUserId, currentUserN
   );
 }
 
+// 参加者名からユーザーIDを取得するコンポーネント
+function ParticipantLink({ name }: { name: string }) {
+  // 参加者エントリは「userId:displayName」形式または「displayName」形式
+  const parts = name.split(':');
+  const userId = parts.length === 2 ? parts[0] : null;
+  const displayName = parts.length === 2 ? parts[1] : name;
+
+  // ユーザーIDがある場合はリンク、ない場合は通常のテキスト
+  if (userId) {
+    return (
+      <Link href={`/profile/${userId}`} className={styles.profileLink}>
+        {displayName}
+      </Link>
+    );
+  }
+
+  return <span>{displayName}</span>;
+}
+
 function RecruitCard({
   schedule,
   currentUserId,
@@ -75,10 +95,21 @@ function RecruitCard({
   // 参加ボタン表示条件
   // currentUserNameがnullの場合は、currentUserIdを使用して参加判定を行う
   const userIdentifier = currentUserName || currentUserId || '';
+  // 参加者リストに既に含まれているかチェック（「userId:displayName」形式または「displayName」形式に対応）
+  const isAlreadyJoined = participants.some(p => {
+    const parts = p.split(':');
+    if (parts.length === 2) {
+      // 「userId:displayName」形式の場合、userIdで判定
+      return parts[0] === currentUserId || parts[1] === userIdentifier;
+    } else {
+      // 「displayName」形式の場合、displayNameで判定
+      return p === userIdentifier;
+    }
+  });
   const canJoin = !isOwnPost 
     && currentUserId 
     && recruitCount > 0 
-    && !participants.includes(userIdentifier);
+    && !isAlreadyJoined;
   
   // デバッグログ（開発時のみ）
   useEffect(() => {
@@ -181,7 +212,13 @@ function RecruitCard({
       </p>
       {participants.length > 0 && (
         <p className={styles.participants}>
-          参加: {participants.join(', ')}
+          参加:{' '}
+          {participants.map((participantName, index) => (
+            <span key={index}>
+              <ParticipantLink name={participantName} />
+              {index < participants.length - 1 && ', '}
+            </span>
+          ))}
         </p>
       )}
       {canJoin && (
@@ -255,7 +292,12 @@ function WishCard({
           {isDeleting ? '削除中...' : '×'}
         </button>
       )}
-      <p className={styles.posterName}>投稿者: {posterName || '読み込み中...'}</p>
+      <p className={styles.posterName}>
+        投稿者:{' '}
+        <Link href={`/profile/${schedule.posterId}`} className={styles.profileLink}>
+          {posterName || '読み込み中...'}
+        </Link>
+      </p>
       <p className={styles.dateTime}>{schedule.dateStr ?? ''}</p>
       <p className={styles.course}>{place}</p>
       {schedule.wishArea && (

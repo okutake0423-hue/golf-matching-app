@@ -87,6 +87,17 @@
   color: #999;
 }
 
+.profileLink {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.profileLink:hover {
+  color: #0056b3;
+}
+
 .competitionName {
   margin: 0 0 4px;
   font-size: 14px;
