@@ -216,7 +216,7 @@ export default function NotifyPage() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>通知を送る対象（プロフィール項目）</label>
+          <label className={styles.label}>通知を送る対象（通知受取りグループ）</label>
           <div className={styles.checkboxGroup}>
             {PROFILE_CHECKBOX_OPTIONS.map((option) => (
               <label key={option.value} className={styles.checkboxLabel}>

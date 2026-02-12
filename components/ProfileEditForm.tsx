@@ -105,7 +105,7 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
         </select>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>プロフィール項目</label>
+        <label className={styles.label}>通知受取りグループ</label>
         <div className={styles.checkboxGroup}>
           {PROFILE_CHECKBOX_OPTIONS.map((option) => (
             <label key={option.value} className={styles.checkboxLabel}>

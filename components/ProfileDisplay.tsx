@@ -67,7 +67,7 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props
           </p>
           {profile.profileCheckboxes && profile.profileCheckboxes.length > 0 && (
             <div className={styles.profileItem}>
-              <strong>プロフィール項目:</strong>
+              <strong>通知受取りグループ:</strong>
               <div className={styles.checkboxDisplay}>
                 {profile.profileCheckboxes.map((value) => {
                   const option = PROFILE_CHECKBOX_OPTIONS.find((opt) => opt.value === value);
