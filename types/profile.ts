@@ -1,4 +1,23 @@
 /**
+ * 会社名（選択肢）
+ */
+export const COMPANY_OPTIONS = [
+  { value: '', label: '未選択' },
+  { value: 'PSTH', label: 'PSTH' },
+  { value: 'PECTH', label: 'PECTH' },
+  { value: 'PMRTH', label: 'PMRTH' },
+  { value: 'PMFTHNN', label: 'PMFTHNN' },
+  { value: 'PMFTHKK', label: 'PMFTHKK' },
+  { value: 'PMFAT', label: 'PMFAT' },
+  { value: 'PIDSTH', label: 'PIDSTH' },
+  { value: 'PSPTTH', label: 'PSPTTH' },
+  { value: 'PASAP', label: 'PASAP' },
+  { value: 'PIDSXTH', label: 'PIDSXTH' },
+] as const;
+
+export type CompanyValue = (typeof COMPANY_OPTIONS)[number]['value'];
+
+/**
  * ゴルフのプレイスタイル（選択肢）
  */
 export const PLAY_STYLE_OPTIONS = [

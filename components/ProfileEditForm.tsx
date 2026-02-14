@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, type UserProfileFormData, type ProfileCheckboxValue } from '@/types/profile';
+import { COMPANY_OPTIONS, PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, type UserProfileFormData, type ProfileCheckboxValue } from '@/types/profile';
 import styles from './ProfileEditForm.module.css';
 
 type Props = {
@@ -63,14 +63,18 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
         <label htmlFor="companyName" className={styles.label}>
           会社名
         </label>
-        <input
+        <select
           id="companyName"
-          type="text"
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
-          className={styles.input}
-          placeholder="例: 株式会社〇〇"
-        />
+          className={styles.select}
+        >
+          {COMPANY_OPTIONS.map((opt) => (
+            <option key={opt.value || 'empty'} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className={styles.field}>
         <label htmlFor="averageScore" className={styles.label}>
