@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { ScheduleDoc, ScheduleRecruit, ScheduleWish } from '@/types/schedule';
 import { getUserProfile } from '@/lib/firestore';
+import { GuideModal } from '@/components/GuideModal';
 import styles from './ScheduleList.module.css';
 
 type Props = {
@@ -86,6 +87,7 @@ function RecruitCard({
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const participants = schedule.participants ?? [];
   const playFee = Number(schedule.playFee) || 0;
   const recruitCount = Number(schedule.recruitCount) || 0;
@@ -173,8 +175,18 @@ function RecruitCard({
     router.push(`/schedules/${schedule.id}/notify`);
   };
 
+  const handleGuide = () => {
+    setShowGuideModal(true);
+  };
+
   return (
     <div className={styles.card}>
+      {showGuideModal && (
+        <GuideModal
+          schedule={schedule}
+          onClose={() => setShowGuideModal(false)}
+        />
+      )}
       <span className={isCompetition ? styles.badgeCompetition : styles.badge}>
         {isCompetition ? 'コンペ' : '募集'}
       </span>
@@ -196,6 +208,14 @@ function RecruitCard({
             aria-label="通知"
           >
             通知
+          </button>
+          <button
+            type="button"
+            onClick={handleGuide}
+            className={styles.guideButton}
+            aria-label="案内"
+          >
+            案内
           </button>
         </>
       )}

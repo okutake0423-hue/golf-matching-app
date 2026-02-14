@@ -187,3 +187,28 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.guideButton {
+  position: absolute;
+  top: 6px;
+  left: 108px;
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  width: 50px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.guideButton:hover:not(:disabled) {
+  background: #f57c00;
+}
+
+.guideButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
