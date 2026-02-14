@@ -212,3 +212,28 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.editButton {
+  position: absolute;
+  top: 6px;
+  left: 166px;
+  background: #9c27b0;
+  color: #fff;
+  border: none;
+  width: 50px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editButton:hover:not(:disabled) {
+  background: #7b1fa2;
+}
+
+.editButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

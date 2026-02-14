@@ -189,6 +189,84 @@ export async function getSchedulesByDate(
 }
 
 /**
+ * 予定を1件取得（ID指定）
+ */
+export async function getScheduleById(scheduleId: string): Promise<ScheduleDoc | null> {
+  const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  const id = snap.id;
+  if (data.type === 'RECRUIT') {
+    return {
+      id,
+      type: 'RECRUIT',
+      posterId: data.posterId,
+      dateStr: data.dateStr,
+      startTime: data.startTime,
+      dateTime: data.dateTime,
+      golfCourseName: data.golfCourseName ?? '',
+      playFee: data.playFee ?? 0,
+      recruitCount: data.recruitCount ?? 0,
+      participants: data.participants ?? [],
+      isCompetition: data.isCompetition ?? false,
+      competitionName: data.competitionName,
+      monthKey: data.monthKey,
+      createdAt: data.createdAt,
+    } as ScheduleRecruit;
+  }
+  if (data.type === 'WISH') {
+    return {
+      id,
+      type: 'WISH',
+      posterId: data.posterId,
+      dateStr: data.dateStr,
+      wishDateStart: data.wishDateStart,
+      wishDateEnd: data.wishDateEnd,
+      wishCourseName: data.wishCourseName,
+      wishArea: data.wishArea,
+      maxPlayFee: data.maxPlayFee ?? 0,
+      monthKey: data.monthKey,
+      createdAt: data.createdAt,
+    } as ScheduleWish;
+  }
+  return null;
+}
+
+/**
+ * 募集予定を更新
+ */
+export async function updateSchedule(
+  scheduleId: string,
+  updates: {
+    dateStr: string;
+    startTime: string;
+    golfCourseName: string;
+    playFee: number;
+    recruitCount: number;
+    participants: string[];
+    isCompetition?: boolean;
+    competitionName?: string | null;
+  }
+): Promise<void> {
+  const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
+  const monthKey = updates.dateStr.slice(0, 7);
+  const dateTime = parseDateTime(updates.dateStr, updates.startTime);
+  await updateDoc(ref, {
+    dateStr: updates.dateStr,
+    startTime: updates.startTime,
+    dateTime,
+    golfCourseName: updates.golfCourseName.trim(),
+    playFee: updates.playFee,
+    recruitCount: updates.recruitCount,
+    participants: updates.participants,
+    isCompetition: updates.isCompetition ?? false,
+    competitionName: updates.competitionName?.trim() || null,
+    monthKey,
+  });
+}
+
+/**
  * 予定を削除
  */
 export async function deleteSchedule(scheduleId: string): Promise<void> {

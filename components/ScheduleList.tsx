@@ -179,6 +179,11 @@ function RecruitCard({
     setShowGuideModal(true);
   };
 
+  const handleEdit = () => {
+    if (!schedule.id) return;
+    router.push(`/schedules/${schedule.id}/edit`);
+  };
+
   return (
     <div className={styles.card}>
       {showGuideModal && (
@@ -216,6 +221,14 @@ function RecruitCard({
             aria-label="案内"
           >
             案内
+          </button>
+          <button
+            type="button"
+            onClick={handleEdit}
+            className={styles.editButton}
+            aria-label="修正"
+          >
+            修正
           </button>
         </>
       )}
