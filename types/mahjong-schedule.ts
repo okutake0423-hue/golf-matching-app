@@ -3,18 +3,22 @@ export type TimestampLike = { seconds: number; nanoseconds: number };
 
 export type MahjongScheduleType = 'RECRUIT' | 'WISH';
 
+/** 開始プレイ時間帯 */
+export type PlayTimeSlot = '朝から' | '昼から' | '夕方から';
+
 /** 【募集モード】麻雀の空き枠を募集 */
 export interface MahjongScheduleRecruit {
   id?: string;
   type: 'RECRUIT';
   posterId: string;
   dateStr: string;
-  startTime: string;
+  /** 開始プレイ時間帯 */
+  playTimeSlot: PlayTimeSlot;
+  /** 想定プレイ時間（例: 2時間） */
+  expectedPlayTime: string;
   dateTime: TimestampLike;
   /** 場所（麻雀会場など） */
   venueName: string;
-  /** 参加費（THB） */
-  playFee: number;
   recruitCount: number;
   participants: string[];
   /** 大会かどうか */
@@ -32,9 +36,10 @@ export interface MahjongScheduleWish {
   dateStr: string;
   wishDateStart: TimestampLike;
   wishDateEnd?: TimestampLike;
-  wishVenueName?: string;
-  wishArea?: string;
-  maxPlayFee: number;
+  /** 開始プレイ時間帯 */
+  playTimeSlot: PlayTimeSlot;
+  /** 想定プレイ時間（例: 2時間） */
+  expectedPlayTime: string;
   monthKey: string;
   createdAt: TimestampLike;
 }
@@ -46,9 +51,9 @@ export const getMahjongMonthKey = (dateStr: string): string => dateStr.slice(0, 
 export interface MahjongScheduleRecruitForm {
   type: 'RECRUIT';
   dateStr: string;
-  startTime: string;
+  playTimeSlot: PlayTimeSlot;
+  expectedPlayTime: string;
   venueName: string;
-  playFee: number;
   recruitCount: number;
   participants: string[];
   isCompetition?: boolean;
@@ -58,9 +63,8 @@ export interface MahjongScheduleRecruitForm {
 export interface MahjongScheduleWishForm {
   type: 'WISH';
   dateStr: string;
-  wishVenueName: string;
-  wishArea: string;
-  maxPlayFee: number;
+  playTimeSlot: PlayTimeSlot;
+  expectedPlayTime: string;
 }
 
 export type MahjongScheduleFormData = MahjongScheduleRecruitForm | MahjongScheduleWishForm;

@@ -131,7 +131,8 @@ export default function MahjongPage() {
                 participantName,
                 scheduleInfo: {
                   dateStr: schedule.dateStr,
-                  startTime: schedule.startTime,
+                  playTimeSlot: schedule.playTimeSlot,
+                  expectedPlayTime: schedule.expectedPlayTime,
                   venueName: schedule.venueName,
                   remainingCount: result.remainingCount,
                 },

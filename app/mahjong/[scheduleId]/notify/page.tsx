@@ -91,7 +91,8 @@ export default function MahjongNotifyPage() {
           profileCheckboxes: selectedCheckboxes,
           scheduleInfo: {
             dateStr: schedule.dateStr,
-            startTime: schedule.startTime,
+            playTimeSlot: schedule.playTimeSlot,
+            expectedPlayTime: schedule.expectedPlayTime,
             venueName: schedule.venueName,
             isCompetition: schedule.isCompetition ?? false,
             competitionName: schedule.competitionName,
@@ -203,9 +204,7 @@ export default function MahjongNotifyPage() {
         <div className={styles.scheduleInfo}>
           <h2 className={styles.sectionTitle}>予定情報</h2>
           <p><strong>日付:</strong> {schedule.dateStr}</p>
-          {schedule.startTime && (
-            <p><strong>時間:</strong> {schedule.startTime}</p>
-          )}
+          <p><strong>時間帯:</strong> {schedule.playTimeSlot || ''}{schedule.expectedPlayTime ? ` / ${schedule.expectedPlayTime}` : ''}</p>
           <p><strong>場所:</strong> {schedule.venueName}</p>
           {schedule.isCompetition && schedule.competitionName && (
             <p><strong>大会名:</strong> {schedule.competitionName}</p>

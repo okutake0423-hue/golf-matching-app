@@ -67,7 +67,7 @@ export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.title}>案内を送る</h2>
         <div className={styles.scheduleInfo}>
-          <p><strong>日付:</strong> {schedule.dateStr} {schedule.startTime || ''}</p>
+          <p><strong>日付:</strong> {schedule.dateStr} {schedule.playTimeSlot || ''}{schedule.expectedPlayTime ? ` / ${schedule.expectedPlayTime}` : ''}</p>
           <p><strong>場所:</strong> {schedule.venueName}</p>
           <p><strong>送信先:</strong> 参加者 {participantUserIds.length}名</p>
         </div>

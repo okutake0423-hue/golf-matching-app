@@ -23,10 +23,16 @@ import { getMahjongMonthKey } from '@/types/mahjong-schedule';
 
 const MAHJONG_SCHEDULES_COLLECTION = 'mahjong_schedules';
 
-function parseDateTime(dateStr: string, startTime: string): Timestamp {
-  const [hours, minutes] = startTime.split(':').map(Number);
+const PLAY_TIME_SLOT_HOURS: Record<string, number> = {
+  '朝から': 8,
+  '昼から': 12,
+  '夕方から': 18,
+};
+
+function parseDateTimeFromSlot(dateStr: string, playTimeSlot: string): Timestamp {
+  const hours = PLAY_TIME_SLOT_HOURS[playTimeSlot] ?? 8;
   const d = new Date(dateStr);
-  d.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  d.setHours(hours, 0, 0, 0);
   return Timestamp.fromDate(d);
 }
 
@@ -38,15 +44,15 @@ export async function addMahjongSchedule(
   const monthKey = getMahjongMonthKey(form.dateStr);
 
   if (form.type === 'RECRUIT') {
-    const dateTime = parseDateTime(form.dateStr, form.startTime);
+    const dateTime = parseDateTimeFromSlot(form.dateStr, form.playTimeSlot);
     const payload = {
       type: 'RECRUIT' as const,
       posterId,
       dateStr: form.dateStr,
-      startTime: form.startTime,
+      playTimeSlot: form.playTimeSlot,
+      expectedPlayTime: (form.expectedPlayTime ?? '').trim() || '',
       dateTime,
       venueName: form.venueName.trim(),
-      playFee: Number(form.playFee) || 0,
       recruitCount: Number(form.recruitCount) || 0,
       participants: form.participants ?? [],
       isCompetition: form.isCompetition || null,
@@ -64,9 +70,8 @@ export async function addMahjongSchedule(
     posterId,
     dateStr: form.dateStr,
     wishDateStart,
-    wishVenueName: (form.wishVenueName ?? '').trim() || null,
-    wishArea: (form.wishArea ?? '').trim() || null,
-    maxPlayFee: Number(form.maxPlayFee) || 0,
+    playTimeSlot: form.playTimeSlot,
+    expectedPlayTime: (form.expectedPlayTime ?? '').trim() || '',
     monthKey,
     createdAt: serverTimestamp(),
   };
@@ -93,10 +98,10 @@ export async function getMahjongSchedulesByMonth(monthKey: string): Promise<Mahj
         type: 'RECRUIT',
         posterId: data.posterId,
         dateStr: data.dateStr,
-        startTime: data.startTime,
+        playTimeSlot: (data.playTimeSlot as string) || '朝から',
+        expectedPlayTime: data.expectedPlayTime ?? '',
         dateTime: data.dateTime,
         venueName: data.venueName ?? '',
-        playFee: data.playFee ?? 0,
         recruitCount: data.recruitCount ?? 0,
         participants: data.participants ?? [],
         isCompetition: data.isCompetition ?? false,
@@ -112,9 +117,8 @@ export async function getMahjongSchedulesByMonth(monthKey: string): Promise<Mahj
         dateStr: data.dateStr,
         wishDateStart: data.wishDateStart,
         wishDateEnd: data.wishDateEnd,
-        wishVenueName: data.wishVenueName,
-        wishArea: data.wishArea,
-        maxPlayFee: data.maxPlayFee ?? 0,
+        playTimeSlot: (data.playTimeSlot as string) || '朝から',
+        expectedPlayTime: data.expectedPlayTime ?? '',
         monthKey: data.monthKey,
         createdAt: data.createdAt,
       } as MahjongScheduleWish);
@@ -135,10 +139,10 @@ export async function getMahjongScheduleById(scheduleId: string): Promise<Mahjon
       type: 'RECRUIT',
       posterId: data.posterId,
       dateStr: data.dateStr,
-      startTime: data.startTime,
+      playTimeSlot: (data.playTimeSlot as string) || '朝から',
+      expectedPlayTime: data.expectedPlayTime ?? '',
       dateTime: data.dateTime,
       venueName: data.venueName ?? '',
-      playFee: data.playFee ?? 0,
       recruitCount: data.recruitCount ?? 0,
       participants: data.participants ?? [],
       isCompetition: data.isCompetition ?? false,
@@ -155,9 +159,8 @@ export async function getMahjongScheduleById(scheduleId: string): Promise<Mahjon
       dateStr: data.dateStr,
       wishDateStart: data.wishDateStart,
       wishDateEnd: data.wishDateEnd,
-      wishVenueName: data.wishVenueName,
-      wishArea: data.wishArea,
-      maxPlayFee: data.maxPlayFee ?? 0,
+      playTimeSlot: (data.playTimeSlot as string) || '朝から',
+      expectedPlayTime: data.expectedPlayTime ?? '',
       monthKey: data.monthKey,
       createdAt: data.createdAt,
     } as MahjongScheduleWish;
@@ -169,9 +172,9 @@ export async function updateMahjongSchedule(
   scheduleId: string,
   updates: {
     dateStr: string;
-    startTime: string;
+    playTimeSlot: string;
+    expectedPlayTime: string;
     venueName: string;
-    playFee: number;
     recruitCount: number;
     participants: string[];
     isCompetition?: boolean;
@@ -180,13 +183,13 @@ export async function updateMahjongSchedule(
 ): Promise<void> {
   const ref = doc(db, MAHJONG_SCHEDULES_COLLECTION, scheduleId);
   const monthKey = updates.dateStr.slice(0, 7);
-  const dateTime = parseDateTime(updates.dateStr, updates.startTime);
+  const dateTime = parseDateTimeFromSlot(updates.dateStr, updates.playTimeSlot);
   await updateDoc(ref, {
     dateStr: updates.dateStr,
-    startTime: updates.startTime,
+    playTimeSlot: updates.playTimeSlot,
+    expectedPlayTime: updates.expectedPlayTime.trim() || '',
     dateTime,
     venueName: updates.venueName.trim(),
-    playFee: updates.playFee,
     recruitCount: updates.recruitCount,
     participants: updates.participants,
     isCompetition: updates.isCompetition ?? false,

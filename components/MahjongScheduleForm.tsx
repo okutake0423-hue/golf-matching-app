@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { MahjongScheduleFormData, MahjongScheduleRecruitForm, MahjongScheduleWishForm } from '@/types/mahjong-schedule';
+import type { MahjongScheduleFormData, MahjongScheduleRecruitForm, MahjongScheduleWishForm, PlayTimeSlot } from '@/types/mahjong-schedule';
 import styles from './ScheduleForm.module.css';
+
+const PLAY_TIME_SLOTS: PlayTimeSlot[] = ['朝から', '昼から', '夕方から'];
 
 type Props = {
   posterId: string;
@@ -20,14 +22,11 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateStr, setDateStr] = useState(defaultDateStr ?? todayStr());
-  const [startTime, setStartTime] = useState('08:00');
+  const [playTimeSlot, setPlayTimeSlot] = useState<PlayTimeSlot>('朝から');
+  const [expectedPlayTime, setExpectedPlayTime] = useState('');
   const [venueName, setVenueName] = useState('');
-  const [playFee, setPlayFee] = useState('');
   const [recruitCount, setRecruitCount] = useState('2');
   const [participants, setParticipants] = useState<string[]>([]);
-  const [wishVenueName, setWishVenueName] = useState('');
-  const [wishArea, setWishArea] = useState('');
-  const [maxPlayFee, setMaxPlayFee] = useState('');
   const [isCompetition, setIsCompetition] = useState(false);
   const [competitionName, setCompetitionName] = useState('');
 
@@ -41,9 +40,9 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
           const form: MahjongScheduleRecruitForm = {
             type: 'RECRUIT',
             dateStr,
-            startTime,
+            playTimeSlot,
+            expectedPlayTime,
             venueName,
-            playFee: Number(playFee) || 0,
             recruitCount: Number(recruitCount) || 0,
             participants,
             isCompetition: isCompetition || undefined,
@@ -54,9 +53,8 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
           const form: MahjongScheduleWishForm = {
             type: 'WISH',
             dateStr,
-            wishVenueName,
-            wishArea,
-            maxPlayFee: Number(maxPlayFee) || 0,
+            playTimeSlot,
+            expectedPlayTime,
           };
           await onSubmit(form);
         }
@@ -66,7 +64,7 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
         setSaving(false);
       }
     },
-    [mode, dateStr, startTime, venueName, playFee, recruitCount, participants, isCompetition, competitionName, wishVenueName, wishArea, maxPlayFee, onSubmit]
+    [mode, dateStr, playTimeSlot, expectedPlayTime, venueName, recruitCount, participants, isCompetition, competitionName, onSubmit]
   );
 
   return (
@@ -87,8 +85,29 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
       {mode === 'RECRUIT' && (
         <>
           <div className={styles.field}>
-            <label>開始時間</label>
-            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            <label>開始プレイ時間帯</label>
+            <div className={styles.checkboxGroup}>
+              {PLAY_TIME_SLOTS.map((slot) => (
+                <label key={slot} className={styles.checkboxLabel}>
+                  <input
+                    type="radio"
+                    name="playTimeSlot"
+                    checked={playTimeSlot === slot}
+                    onChange={() => setPlayTimeSlot(slot)}
+                  />
+                  {slot}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label>想定プレイ時間</label>
+            <input
+              type="text"
+              value={expectedPlayTime}
+              onChange={(e) => setExpectedPlayTime(e.target.value)}
+              placeholder="例: 2時間"
+            />
           </div>
           <div className={styles.field}>
             <label>場所</label>
@@ -99,10 +118,6 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
               placeholder="例: ○○麻雀荘"
               required
             />
-          </div>
-          <div className={styles.field}>
-            <label>参加費（THB）</label>
-            <input type="number" min={0} value={playFee} onChange={(e) => setPlayFee(e.target.value)} placeholder="例: 500" />
           </div>
           <div className={styles.field}>
             <label>募集人数（あと○名）</label>
@@ -146,16 +161,29 @@ export function MahjongScheduleForm({ posterId, defaultDateStr, onSubmit }: Prop
       {mode === 'WISH' && (
         <>
           <div className={styles.field}>
-            <label>希望場所</label>
-            <input type="text" value={wishVenueName} onChange={(e) => setWishVenueName(e.target.value)} placeholder="任意" />
+            <label>開始プレイ時間帯</label>
+            <div className={styles.checkboxGroup}>
+              {PLAY_TIME_SLOTS.map((slot) => (
+                <label key={slot} className={styles.checkboxLabel}>
+                  <input
+                    type="radio"
+                    name="playTimeSlotWish"
+                    checked={playTimeSlot === slot}
+                    onChange={() => setPlayTimeSlot(slot)}
+                  />
+                  {slot}
+                </label>
+              ))}
+            </div>
           </div>
           <div className={styles.field}>
-            <label>希望地域</label>
-            <input type="text" value={wishArea} onChange={(e) => setWishArea(e.target.value)} placeholder="例: バンコク近郊" />
-          </div>
-          <div className={styles.field}>
-            <label>上限参加費（THB）</label>
-            <input type="number" min={0} value={maxPlayFee} onChange={(e) => setMaxPlayFee(e.target.value)} placeholder="例: 500" />
+            <label>想定プレイ時間</label>
+            <input
+              type="text"
+              value={expectedPlayTime}
+              onChange={(e) => setExpectedPlayTime(e.target.value)}
+              placeholder="例: 2時間"
+            />
           </div>
         </>
       )}

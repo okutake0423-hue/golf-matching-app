@@ -29,9 +29,12 @@ export async function POST(request: NextRequest) {
     const appUrl = 'https://golf-matching-app.vercel.app/';
     const venueLabel = scheduleInfo.venueName != null ? '場所' : 'コース';
     const venueValue = scheduleInfo.venueName ?? scheduleInfo.golfCourseName ?? '';
+    const timeText = scheduleInfo.playTimeSlot != null
+      ? `時間帯: ${scheduleInfo.playTimeSlot}${scheduleInfo.expectedPlayTime ? ` / ${scheduleInfo.expectedPlayTime}` : ''}`
+      : `時間: ${scheduleInfo.startTime || ''}`;
     const message = {
       type: 'text',
-      text: `${participantName}さんが以下の予定に参加しました。\n\n日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\n${venueLabel}: ${venueValue}\n残り人数: ${scheduleInfo.remainingCount}名\n\nアプリ: ${appUrl}`,
+      text: `${participantName}さんが以下の予定に参加しました。\n\n日付: ${scheduleInfo.dateStr}\n${timeText}\n${venueLabel}: ${venueValue}\n残り人数: ${scheduleInfo.remainingCount}名\n\nアプリ: ${appUrl}`,
     };
 
     const response = await fetch('https://api.line.me/v2/bot/message/push', {

@@ -46,7 +46,6 @@ function RecruitCard({
   const [isJoining, setIsJoining] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const participants = schedule.participants ?? [];
-  const playFee = Number(schedule.playFee) || 0;
   const recruitCount = Number(schedule.recruitCount) || 0;
   const isOwnPost = currentUserId === schedule.posterId;
   const isCompetition = schedule.isCompetition ?? false;
@@ -121,10 +120,10 @@ function RecruitCard({
       <p className={styles.posterName}>
         投稿者: <Link href={`/profile/${schedule.posterId}`} className={styles.profileLink}>{posterName || '読み込み中...'}</Link>
       </p>
-      <p className={styles.dateTime}>{schedule.dateStr ?? ''} {schedule.startTime ?? ''}</p>
+      <p className={styles.dateTime}>{schedule.dateStr ?? ''} {schedule.playTimeSlot ?? ''}{schedule.expectedPlayTime ? ` / ${schedule.expectedPlayTime}` : ''}</p>
       {isCompetition && schedule.competitionName && <p className={styles.competitionName}>{schedule.competitionName}</p>}
       <p className={styles.course}>{schedule.venueName ?? ''}</p>
-      <p className={styles.detail}>参加費 {playFee.toLocaleString()}THB ・ あと{recruitCount}名</p>
+      <p className={styles.detail}>あと{recruitCount}名</p>
       {participants.length > 0 && (
         <p className={styles.participants}>
           参加: {participants.map((p, i) => (
@@ -192,10 +191,7 @@ function WishCard({
       <p className={styles.posterName}>
         投稿者: <Link href={`/profile/${schedule.posterId}`} className={styles.profileLink}>{posterName || '読み込み中...'}</Link>
       </p>
-      <p className={styles.dateTime}>{schedule.dateStr ?? ''}</p>
-      <p className={styles.course}>{place}</p>
-      {schedule.wishArea && <p className={styles.area}>希望地域: {schedule.wishArea}</p>}
-      <p className={styles.detail}>上限参加費 {maxPlayFee.toLocaleString()}THB</p>
+      <p className={styles.dateTime}>{schedule.dateStr ?? ''} {schedule.playTimeSlot ?? ''}{schedule.expectedPlayTime ? ` / ${schedule.expectedPlayTime}` : ''}</p>
     </div>
   );
 }

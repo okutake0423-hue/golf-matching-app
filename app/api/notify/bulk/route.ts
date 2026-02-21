@@ -248,9 +248,12 @@ export async function POST(request: NextRequest) {
     const appUrl = 'https://golf-matching-app.vercel.app/';
     const venueLabel = scheduleInfo.venueName != null ? '場所' : 'コース';
     const venueValue = scheduleInfo.venueName ?? scheduleInfo.golfCourseName ?? '';
+    const timeLine = scheduleInfo.playTimeSlot != null
+      ? `時間帯: ${scheduleInfo.playTimeSlot}${scheduleInfo.expectedPlayTime ? ` / ${scheduleInfo.expectedPlayTime}` : ''}`
+      : `時間: ${scheduleInfo.startTime || ''}`;
     const scheduleText = scheduleInfo.isCompetition && scheduleInfo.competitionName
-      ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\n${venueLabel}: ${venueValue}`
-      : `日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\n${venueLabel}: ${venueValue}`;
+      ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n${timeLine}\n${venueLabel}: ${venueValue}`
+      : `日付: ${scheduleInfo.dateStr}\n${timeLine}\n${venueLabel}: ${venueValue}`;
 
     const headerText = scheduleInfo.venueName != null ? '新しい麻雀予定が投稿されました！' : '新しいゴルフ予定が投稿されました！';
     const message = {

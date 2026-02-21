@@ -29,9 +29,9 @@ export default function EditMahjongSchedulePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [dateStr, setDateStr] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [playTimeSlot, setPlayTimeSlot] = useState<string>('朝から');
+  const [expectedPlayTime, setExpectedPlayTime] = useState('');
   const [venueName, setVenueName] = useState('');
-  const [playFee, setPlayFee] = useState('');
   const [recruitCount, setRecruitCount] = useState('');
   const [participants, setParticipants] = useState<string[]>([]);
   const [isCompetition, setIsCompetition] = useState(false);
@@ -76,9 +76,9 @@ export default function EditMahjongSchedulePage() {
         }
         setSchedule(s);
         setDateStr(s.dateStr ?? '');
-        setStartTime(s.startTime ?? '08:00');
+        setPlayTimeSlot(s.playTimeSlot ?? '朝から');
+        setExpectedPlayTime(s.expectedPlayTime ?? '');
         setVenueName(s.venueName ?? '');
-        setPlayFee(String(s.playFee ?? ''));
         setRecruitCount(String(s.recruitCount ?? '0'));
         setParticipants(s.participants ?? []);
         setIsCompetition(s.isCompetition ?? false);
@@ -105,14 +105,13 @@ export default function EditMahjongSchedulePage() {
       setSaving(true);
       setError(null);
       try {
-        const playFeeNum = Number(playFee) || 0;
         const recruitCountNum = Math.max(0, Number(recruitCount) || 0);
 
         await updateMahjongSchedule(schedule.id, {
           dateStr,
-          startTime,
+          playTimeSlot,
+          expectedPlayTime: expectedPlayTime.trim(),
           venueName: venueName.trim(),
-          playFee: playFeeNum,
           recruitCount: recruitCountNum,
           participants,
           isCompetition,
@@ -123,8 +122,8 @@ export default function EditMahjongSchedulePage() {
         const summary =
           `以下の予定が更新されました。\n\n` +
           (isCompetition && competitionName ? `【${competitionName}】\n` : '') +
-          `日付: ${dateStr}\n時間: ${startTime}\n場所: ${venueName}\n` +
-          `参加費: ${playFeeNum.toLocaleString()}THB ・ あと${recruitCountNum}名\n\n` +
+          `日付: ${dateStr}\n時間帯: ${playTimeSlot}${expectedPlayTime ? ` / ${expectedPlayTime}` : ''}\n場所: ${venueName}\n` +
+          `あと${recruitCountNum}名\n\n` +
           `アプリ: https://golf-matching-app.vercel.app/`;
 
         if (participantUserIds.length > 0) {
@@ -145,9 +144,9 @@ export default function EditMahjongSchedulePage() {
     [
       schedule?.id,
       dateStr,
-      startTime,
+      playTimeSlot,
+      expectedPlayTime,
       venueName,
-      playFee,
       recruitCount,
       participants,
       isCompetition,
@@ -212,15 +211,6 @@ export default function EditMahjongSchedulePage() {
               onChange={(e) => setVenueName(e.target.value)}
               placeholder="例: ○○麻雀荘"
               required
-            />
-          </div>
-          <div className={styles.field}>
-            <label>参加費（THB）</label>
-            <input
-              type="number"
-              min={0}
-              value={playFee}
-              onChange={(e) => setPlayFee(e.target.value)}
             />
           </div>
           <div className={styles.field}>
