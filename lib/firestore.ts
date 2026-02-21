@@ -29,6 +29,9 @@ export async function getUserProfile(
     averageScore: data.averageScore ?? null,
     playStyle: data.playStyle ?? '',
     profileCheckboxes: data.profileCheckboxes ?? [],
+    mahjongLevel: data.mahjongLevel ?? '',
+    favoriteYaku: data.favoriteYaku ?? '',
+    mahjongRecruitNotify: data.mahjongRecruitNotify ?? false,
     updatedAt:
       data.updatedAt instanceof Timestamp
         ? data.updatedAt.toMillis()
@@ -62,6 +65,9 @@ export async function setUserProfile(
         formData.averageScore != null ? Number(formData.averageScore) : null,
       playStyle: formData.playStyle,
       profileCheckboxes: formData.profileCheckboxes ?? [],
+      mahjongLevel: formData.mahjongLevel ?? '',
+      favoriteYaku: (formData.favoriteYaku ?? '').trim(),
+      mahjongRecruitNotify: formData.mahjongRecruitNotify ?? false,
       updatedAt: serverTimestamp(),
     },
     { merge: true }

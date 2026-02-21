@@ -1,7 +1,7 @@
 'use client';
 
 import type { UserProfileDisplay } from '@/types/profile';
-import { PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS } from '@/types/profile';
+import { PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, MAHJONG_LEVEL_OPTIONS } from '@/types/profile';
 import styles from './ProfileDisplay.module.css';
 
 type Props = {
@@ -86,6 +86,25 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules, onMahjo
               下の「編集」ボタンから会社名・平均スコア・プレイスタイルを設定できます。
             </p>
           )}
+        </div>
+      </section>
+
+      {/* 麻雀プロフィール */}
+      <section className={styles.section} aria-label="麻雀プロフィール">
+        <h3 className={styles.sectionTitle}>麻雀プロフィール</h3>
+        <div className={styles.profileInfo}>
+          <p className={styles.profileItem}>
+            <strong>麻雀レベル:</strong>{' '}
+            {MAHJONG_LEVEL_OPTIONS.find((o) => o.value === profile.mahjongLevel)?.label ?? profile.mahjongLevel ?? '—'}
+          </p>
+          <p className={styles.profileItem}>
+            <strong>好きな役:</strong>{' '}
+            {profile.favoriteYaku?.trim() ? profile.favoriteYaku : '—'}
+          </p>
+          <p className={styles.profileItem}>
+            <strong>募集通知受取り:</strong>{' '}
+            {profile.mahjongRecruitNotify ? '受取る' : '受取らない'}
+          </p>
         </div>
       </section>
 

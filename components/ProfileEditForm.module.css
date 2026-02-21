@@ -12,6 +12,16 @@
   text-align: center;
 }
 
+.subsectionTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 28px;
+  margin-bottom: 16px;
+  color: #333;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
 .error {
   background-color: #fee;
   color: #c33;

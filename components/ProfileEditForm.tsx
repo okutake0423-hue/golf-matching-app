@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { COMPANY_OPTIONS, PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, type UserProfileFormData, type ProfileCheckboxValue } from '@/types/profile';
+import { COMPANY_OPTIONS, PLAY_STYLE_OPTIONS, PROFILE_CHECKBOX_OPTIONS, MAHJONG_LEVEL_OPTIONS, type UserProfileFormData, type ProfileCheckboxValue } from '@/types/profile';
 import styles from './ProfileEditForm.module.css';
 
 type Props = {
@@ -21,6 +21,9 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
   const [profileCheckboxes, setProfileCheckboxes] = useState<ProfileCheckboxValue[]>(
     initialData.profileCheckboxes ?? []
   );
+  const [mahjongLevel, setMahjongLevel] = useState(initialData.mahjongLevel ?? '');
+  const [favoriteYaku, setFavoriteYaku] = useState(initialData.favoriteYaku ?? '');
+  const [mahjongRecruitNotify, setMahjongRecruitNotify] = useState(initialData.mahjongRecruitNotify ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +39,9 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
             averageScore === '' ? null : parseInt(averageScore, 10) || null,
           playStyle,
           profileCheckboxes,
+          mahjongLevel,
+          favoriteYaku: favoriteYaku.trim(),
+          mahjongRecruitNotify,
         });
         if (onCancel) onCancel();
       } catch (err) {
@@ -44,7 +50,7 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
         setSaving(false);
       }
     },
-    [companyName, averageScore, playStyle, profileCheckboxes, onSave, onCancel]
+    [companyName, averageScore, playStyle, profileCheckboxes, mahjongLevel, favoriteYaku, mahjongRecruitNotify, onSave, onCancel]
   );
 
   const handleCheckboxChange = useCallback((value: ProfileCheckboxValue, checked: boolean) => {
@@ -124,6 +130,50 @@ export function ProfileEditForm({ initialData, onSave, onCancel }: Props) {
           ))}
         </div>
       </div>
+
+      <h3 className={styles.subsectionTitle}>麻雀プロフィール</h3>
+      <div className={styles.field}>
+        <label htmlFor="mahjongLevel" className={styles.label}>
+          麻雀レベル
+        </label>
+        <select
+          id="mahjongLevel"
+          value={mahjongLevel}
+          onChange={(e) => setMahjongLevel(e.target.value)}
+          className={styles.select}
+        >
+          {MAHJONG_LEVEL_OPTIONS.map((opt) => (
+            <option key={opt.value || 'empty'} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.field}>
+        <label htmlFor="favoriteYaku" className={styles.label}>
+          好きな役
+        </label>
+        <input
+          id="favoriteYaku"
+          type="text"
+          value={favoriteYaku}
+          onChange={(e) => setFavoriteYaku(e.target.value)}
+          className={styles.input}
+          placeholder="例: 七対子、立直"
+        />
+      </div>
+      <div className={styles.field}>
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={mahjongRecruitNotify}
+            onChange={(e) => setMahjongRecruitNotify(e.target.checked)}
+            className={styles.checkbox}
+          />
+          麻雀募集通知受取り
+        </label>
+      </div>
+
       <div className={styles.actions}>
         <button
           type="submit"

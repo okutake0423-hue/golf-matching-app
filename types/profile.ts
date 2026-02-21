@@ -43,6 +43,18 @@ export const PROFILE_CHECKBOX_OPTIONS = [
 export type ProfileCheckboxValue = (typeof PROFILE_CHECKBOX_OPTIONS)[number]['value'];
 
 /**
+ * 麻雀レベル（選択肢）
+ */
+export const MAHJONG_LEVEL_OPTIONS = [
+  { value: '', label: '未選択' },
+  { value: 'rules_only', label: 'ルール知ってる、符計算できない' },
+  { value: 'fu_ok', label: '符計算はできます、麻雀大好き' },
+  { value: 'jukki', label: '雀鬼' },
+] as const;
+
+export type MahjongLevelValue = (typeof MAHJONG_LEVEL_OPTIONS)[number]['value'];
+
+/**
  * Firestoreの users コレクションに保存するドキュメントの型
  * ドキュメントID = userId（LINEのユーザーID）
  */
@@ -59,6 +71,12 @@ export interface UserProfileDoc {
   playStyle: string;
   /** プロフィールチェックボックス項目（複数選択可能） */
   profileCheckboxes?: ProfileCheckboxValue[];
+  /** 麻雀レベル */
+  mahjongLevel?: string;
+  /** 好きな役 */
+  favoriteYaku?: string;
+  /** 麻雀募集通知受取り */
+  mahjongRecruitNotify?: boolean;
   updatedAt: ReturnType<typeof Date.prototype.getTime>;
 }
 
@@ -74,6 +92,9 @@ export interface UserProfileDisplay {
   averageScore: number | null;
   playStyle: string;
   profileCheckboxes?: ProfileCheckboxValue[];
+  mahjongLevel?: string;
+  favoriteYaku?: string;
+  mahjongRecruitNotify?: boolean;
 }
 
 /**
@@ -84,4 +105,7 @@ export interface UserProfileFormData {
   averageScore: number | null;
   playStyle: string;
   profileCheckboxes?: ProfileCheckboxValue[];
+  mahjongLevel?: string;
+  favoriteYaku?: string;
+  mahjongRecruitNotify?: boolean;
 }

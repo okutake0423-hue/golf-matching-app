@@ -40,6 +40,9 @@ export default function ProfileEditPage() {
           averageScore: stored?.averageScore ?? null,
           playStyle: stored?.playStyle ?? '',
           profileCheckboxes: stored?.profileCheckboxes ?? [],
+          mahjongLevel: stored?.mahjongLevel ?? '',
+          favoriteYaku: stored?.favoriteYaku ?? '',
+          mahjongRecruitNotify: stored?.mahjongRecruitNotify ?? false,
         });
       } catch (err) {
         console.error(err);
