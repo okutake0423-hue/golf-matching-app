@@ -159,9 +159,10 @@ export default function SchedulesPage() {
     [userId, userName, schedules, monthKey, loadSchedules]
   );
 
+  const todayStr = toDateStr(new Date());
   const listSchedules = selectedDate
     ? schedules.filter((s) => s.dateStr === toDateStr(selectedDate))
-    : schedules;
+    : schedules.filter((s) => s.dateStr >= todayStr);
   const dateLabel = selectedDate
     ? `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`
     : undefined;
