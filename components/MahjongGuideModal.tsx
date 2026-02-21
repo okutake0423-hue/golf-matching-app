@@ -1,0 +1,98 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import type { MahjongScheduleRecruit } from '@/types/mahjong-schedule';
+import styles from './GuideModal.module.css';
+
+type Props = {
+  schedule: MahjongScheduleRecruit;
+  onClose: () => void;
+  onSent?: () => void;
+};
+
+function getParticipantUserIds(participants: string[]): string[] {
+  const ids: string[] = [];
+  for (const p of participants) {
+    const parts = p.split(':');
+    if (parts.length === 2 && parts[0].trim()) ids.push(parts[0].trim());
+  }
+  return ids;
+}
+
+export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const participantUserIds = getParticipantUserIds(schedule.participants ?? []);
+
+  const handleSend = useCallback(async () => {
+    const trimmed = message.trim();
+    if (!trimmed) {
+      setError('案内文を入力してください');
+      return;
+    }
+    if (participantUserIds.length === 0) {
+      setError('LINEに送信できる参加者がいません。');
+      return;
+    }
+    setIsSending(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/notify/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantUserIds, message: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.message || '送信に失敗しました');
+        return;
+      }
+      if (data.sent) {
+        alert(`案内を${data.sentCount}件送信しました。`);
+        onSent?.();
+        onClose();
+      } else {
+        setError(data.message || '送信できませんでした');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '送信に失敗しました');
+    } finally {
+      setIsSending(false);
+    }
+  }, [message, participantUserIds, onClose, onSent]);
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.title}>案内を送る</h2>
+        <div className={styles.scheduleInfo}>
+          <p><strong>日付:</strong> {schedule.dateStr} {schedule.startTime || ''}</p>
+          <p><strong>場所:</strong> {schedule.venueName}</p>
+          <p><strong>送信先:</strong> 参加者 {participantUserIds.length}名</p>
+        </div>
+        <div className={styles.field}>
+          <label htmlFor="mahjong-guide-message" className={styles.label}>案内文</label>
+          <textarea
+            id="mahjong-guide-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className={styles.textarea}
+            placeholder="参加者に送りたい案内を入力してください"
+            rows={6}
+            disabled={isSending}
+          />
+        </div>
+        {error && <div className={styles.error}>{error}</div>}
+        <div className={styles.actions}>
+          <button type="button" onClick={handleSend} disabled={isSending || !message.trim()} className={styles.buttonSend}>
+            {isSending ? '送信中...' : '案内を送信'}
+          </button>
+          <button type="button" onClick={onClose} disabled={isSending} className={styles.buttonCancel}>
+            キャンセル
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

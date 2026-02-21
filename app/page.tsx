@@ -120,6 +120,10 @@ export default function Home() {
     router.push('/schedules');
   };
 
+  const handleMahjongSchedules = () => {
+    router.push('/mahjong');
+  };
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -200,6 +204,7 @@ export default function Home() {
             onEdit={handleEdit}
             onLogout={handleLogout}
             onSchedules={handleSchedules}
+            onMahjongSchedules={handleMahjongSchedules}
           />
         ) : (
           <div className={styles.login}>

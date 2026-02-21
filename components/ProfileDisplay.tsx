@@ -9,9 +9,10 @@ type Props = {
   onEdit?: () => void;
   onLogout?: () => void;
   onSchedules?: () => void;
+  onMahjongSchedules?: () => void;
 };
 
-export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props) {
+export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules, onMahjongSchedules }: Props) {
   const playStyleLabel =
     (PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
       profile.playStyle) ||
@@ -91,7 +92,12 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules }: Props
       <div className={styles.actions}>
         {onSchedules && (
           <button type="button" onClick={onSchedules} className={styles.buttonEdit}>
-            予定を見る
+            ゴルフ予定を見る
+          </button>
+        )}
+        {onMahjongSchedules && (
+          <button type="button" onClick={onMahjongSchedules} className={styles.buttonEdit}>
+            麻雀予定を見る
           </button>
         )}
         {onEdit && (

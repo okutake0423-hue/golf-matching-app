@@ -244,15 +244,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 通知メッセージを作成
+    // 通知メッセージを作成（venueName: 麻雀, golfCourseName: ゴルフ）
     const appUrl = 'https://golf-matching-app.vercel.app/';
+    const venueLabel = scheduleInfo.venueName != null ? '場所' : 'コース';
+    const venueValue = scheduleInfo.venueName ?? scheduleInfo.golfCourseName ?? '';
     const scheduleText = scheduleInfo.isCompetition && scheduleInfo.competitionName
-      ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\nコース: ${scheduleInfo.golfCourseName}`
-      : `日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\nコース: ${scheduleInfo.golfCourseName}`;
+      ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\n${venueLabel}: ${venueValue}`
+      : `日付: ${scheduleInfo.dateStr}\n時間: ${scheduleInfo.startTime || ''}\n${venueLabel}: ${venueValue}`;
 
+    const headerText = scheduleInfo.venueName != null ? '新しい麻雀予定が投稿されました！' : '新しいゴルフ予定が投稿されました！';
     const message = {
       type: 'text',
-      text: `新しいゴルフ予定が投稿されました！\n\n${scheduleText}\n\nアプリ: ${appUrl}`,
+      text: `${headerText}\n\n${scheduleText}\n\nアプリ: ${appUrl}`,
     };
 
     // 複数ユーザーにLINE通知を送信
