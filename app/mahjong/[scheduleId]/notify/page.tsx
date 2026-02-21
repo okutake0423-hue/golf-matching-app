@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { initLiff, isLoggedIn } from '@/lib/liff';
 import { getMahjongSchedulesByMonth } from '@/lib/firestore-mahjong-schedules';
-import { PROFILE_CHECKBOX_OPTIONS, type ProfileCheckboxValue } from '@/types/profile';
 import type { MahjongScheduleRecruit } from '@/types/mahjong-schedule';
 import styles from './notify.module.css';
 
@@ -16,7 +15,6 @@ export default function MahjongNotifyPage() {
 
   const [ready, setReady] = useState(false);
   const [schedule, setSchedule] = useState<MahjongScheduleRecruit | null>(null);
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState<ProfileCheckboxValue[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,19 +65,8 @@ export default function MahjongNotifyPage() {
     loadSchedule();
   }, [scheduleId, ready]);
 
-  const handleCheckboxChange = useCallback((value: ProfileCheckboxValue, checked: boolean) => {
-    if (checked) {
-      setSelectedCheckboxes((prev) => [...prev, value]);
-    } else {
-      setSelectedCheckboxes((prev) => prev.filter((v) => v !== value));
-    }
-  }, []);
-
   const handleSend = useCallback(async () => {
-    if (!schedule || selectedCheckboxes.length === 0) {
-      setError('少なくとも1つの項目を選択してください');
-      return;
-    }
+    if (!schedule) return;
 
     setIsSending(true);
     setError(null);
@@ -88,7 +75,7 @@ export default function MahjongNotifyPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          profileCheckboxes: selectedCheckboxes,
+          mahjongRecruitNotify: true,
           scheduleInfo: {
             dateStr: schedule.dateStr,
             playTimeSlot: schedule.playTimeSlot,
@@ -161,7 +148,7 @@ export default function MahjongNotifyPage() {
     } finally {
       setIsSending(false);
     }
-  }, [schedule, selectedCheckboxes, router]);
+  }, [schedule, router]);
 
   if (!ready || loading) {
     return (
@@ -211,22 +198,9 @@ export default function MahjongNotifyPage() {
           )}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>通知を送る対象（通知受取りグループ）</label>
-          <div className={styles.checkboxGroup}>
-            {PROFILE_CHECKBOX_OPTIONS.map((option) => (
-              <label key={option.value} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedCheckboxes.includes(option.value)}
-                  onChange={(e) => handleCheckboxChange(option.value, e.target.checked)}
-                  className={styles.checkbox}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+        <p className={styles.hint}>
+          麻雀プロフィールで「募集通知受取り」をONにしているユーザーにLINE通知を送信します。
+        </p>
 
         {error && <div className={styles.error}>{error}</div>}
 
@@ -234,7 +208,7 @@ export default function MahjongNotifyPage() {
           <button
             type="button"
             onClick={handleSend}
-            disabled={isSending || selectedCheckboxes.length === 0}
+            disabled={isSending}
             className={styles.buttonSend}
           >
             {isSending ? '送信中...' : '通知を送信'}

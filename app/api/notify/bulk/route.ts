@@ -6,9 +6,11 @@ import type { ProfileCheckboxValue } from '@/types/profile';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { profileCheckboxes, scheduleInfo } = await request.json();
+    const { profileCheckboxes, scheduleInfo, mahjongRecruitNotify } = await request.json();
 
-    if (!profileCheckboxes || !Array.isArray(profileCheckboxes) || profileCheckboxes.length === 0) {
+    const isMahjongRecruitMode = mahjongRecruitNotify === true;
+
+    if (!isMahjongRecruitMode && (!profileCheckboxes || !Array.isArray(profileCheckboxes) || profileCheckboxes.length === 0)) {
       return NextResponse.json(
         { message: 'プロフィール項目が指定されていません' },
         { status: 400 }
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('[Bulk Notify] 通知送信開始:', {
-      profileCheckboxes,
+      profileCheckboxes: isMahjongRecruitMode ? 'mahjongRecruitNotify' : profileCheckboxes,
       scheduleInfo,
       channelAccessTokenSet: !!channelAccessToken,
     });
@@ -174,19 +176,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Firestoreからプロフィール項目に該当するユーザーを検索
+    // Firestoreから対象ユーザーを検索
     let querySnapshot;
     try {
       const db = admin.firestore();
       const usersRef = db.collection('users');
-      
-      // array-contains-any を使用して、指定されたプロフィール項目のいずれかを含むユーザーを検索
-      querySnapshot = await usersRef
-        .where('profileCheckboxes', 'array-contains-any', profileCheckboxes)
-        .get();
+
+      if (isMahjongRecruitMode) {
+        // 麻雀募集通知: mahjongRecruitNotify が true のユーザーを検索
+        querySnapshot = await usersRef
+          .where('mahjongRecruitNotify', '==', true)
+          .get();
+      } else {
+        // ゴルフ: array-contains-any でプロフィール項目に該当するユーザーを検索
+        querySnapshot = await usersRef
+          .where('profileCheckboxes', 'array-contains-any', profileCheckboxes)
+          .get();
+      }
       
       console.log('[Bulk Notify] Firestoreクエリ成功:', {
         querySize: querySnapshot.size,
+        mode: isMahjongRecruitMode ? 'mahjongRecruitNotify' : 'profileCheckboxes',
       });
     } catch (queryError) {
       console.error('[Bulk Notify] Firestoreクエリエラー:', {
@@ -217,30 +227,38 @@ export async function POST(request: NextRequest) {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       const userId = data.userId || doc.id;
-      const userCheckboxes = data.profileCheckboxes || [];
       
-      // 選択されたプロフィール項目のいずれかを含むユーザーのみを対象とする
-      const hasMatchingCheckbox = profileCheckboxes.some((checkbox: ProfileCheckboxValue) =>
-        userCheckboxes.includes(checkbox)
-      );
-      
-      if (hasMatchingCheckbox && userId) {
-        targetUserIds.push(userId);
+      if (isMahjongRecruitMode) {
+        if (data.mahjongRecruitNotify === true && userId) {
+          targetUserIds.push(userId);
+        }
+      } else {
+        const userCheckboxes = data.profileCheckboxes || [];
+        const hasMatchingCheckbox = profileCheckboxes.some((checkbox: ProfileCheckboxValue) =>
+          userCheckboxes.includes(checkbox)
+        );
+        if (hasMatchingCheckbox && userId) {
+          targetUserIds.push(userId);
+        }
       }
     });
 
     console.log('[Bulk Notify] 検索結果:', {
-      profileCheckboxes,
+      mode: isMahjongRecruitMode ? 'mahjongRecruitNotify' : 'profileCheckboxes',
       foundUsers: targetUserIds.length,
-      userIds: targetUserIds.slice(0, 5), // 最初の5件のみログ出力
+      userIds: targetUserIds.slice(0, 5),
     });
+
+    const noUsersMessage = isMahjongRecruitMode
+      ? '該当するユーザーが見つかりませんでした。麻雀プロフィールで「募集通知受取り」をONにしているユーザーがいない可能性があります。'
+      : '該当するユーザーが見つかりませんでした。プロフィール項目を選択しているユーザーがいない可能性があります。';
 
     if (targetUserIds.length === 0) {
       return NextResponse.json({
         success: true,
         sent: false,
         sentCount: 0,
-        message: '該当するユーザーが見つかりませんでした。プロフィール項目を選択しているユーザーがいない可能性があります。',
+        message: noUsersMessage,
       });
     }
 

@@ -46,6 +46,12 @@
   margin-right: 8px;
 }
 
+.hint {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
 .field {
   margin-bottom: 24px;
 }
