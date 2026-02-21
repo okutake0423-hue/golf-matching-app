@@ -196,11 +196,28 @@ export default function EditMahjongSchedulePage() {
             />
           </div>
           <div className={styles.field}>
-            <label>開始時間</label>
+            <label>開始プレイ時間帯</label>
+            <div className={styles.checkboxGroup}>
+              {(['朝から', '昼から', '夕方から'] as const).map((slot) => (
+                <label key={slot} className={styles.checkboxLabel}>
+                  <input
+                    type="radio"
+                    name="playTimeSlot"
+                    checked={playTimeSlot === slot}
+                    onChange={() => setPlayTimeSlot(slot)}
+                  />
+                  {slot}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label>想定プレイ時間</label>
             <input
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              type="text"
+              value={expectedPlayTime}
+              onChange={(e) => setExpectedPlayTime(e.target.value)}
+              placeholder="例: 2時間"
             />
           </div>
           <div className={styles.field}>
