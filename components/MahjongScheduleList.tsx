@@ -151,8 +151,6 @@ function WishCard({
 }) {
   const [posterName, setPosterName] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const place = schedule.wishVenueName || schedule.wishArea || '未指定';
-  const maxPlayFee = Number(schedule.maxPlayFee) || 0;
   const isOwnPost = currentUserId === schedule.posterId;
 
   useEffect(() => {
