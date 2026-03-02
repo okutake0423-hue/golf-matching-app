@@ -37,6 +37,8 @@ export default function EditSchedulePage() {
   const [participants, setParticipants] = useState<string[]>([]);
   const [isCompetition, setIsCompetition] = useState(false);
   const [competitionName, setCompetitionName] = useState('');
+  const [competitionFee, setCompetitionFee] = useState('');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -84,6 +86,10 @@ export default function EditSchedulePage() {
         setParticipants(s.participants ?? []);
         setIsCompetition(s.isCompetition ?? false);
         setCompetitionName(s.competitionName ?? '');
+        setCompetitionFee(
+          s.competitionFee != null ? String(s.competitionFee) : ''
+        );
+        setNote(s.note ?? '');
       } catch (err) {
         console.error('Failed to load schedule:', err);
         setError('予定の読み込みに失敗しました');
@@ -108,16 +114,20 @@ export default function EditSchedulePage() {
       try {
         const playFeeNum = Number(playFee) || 0;
         const recruitCountNum = Math.max(0, Number(recruitCount) || 0);
+        const competitionFeeNum =
+          competitionFee !== '' ? Number(competitionFee) || 0 : 0;
 
         await updateSchedule(schedule.id, {
           dateStr,
           startTime,
           golfCourseName: golfCourseName.trim(),
           playFee: playFeeNum,
+          competitionFee: isCompetition ? competitionFeeNum : undefined,
           recruitCount: recruitCountNum,
           participants,
           isCompetition,
           competitionName: isCompetition ? competitionName.trim() : null,
+          note: note.trim() || null,
         });
 
         const participantUserIds = getParticipantUserIds(participants);
@@ -125,7 +135,12 @@ export default function EditSchedulePage() {
           `以下の予定が更新されました。\n\n` +
           (isCompetition && competitionName ? `【${competitionName}】\n` : '') +
           `日付: ${dateStr}\n時間: ${startTime}\nコース: ${golfCourseName}\n` +
-          `プレーフィー: ${playFeeNum.toLocaleString()}THB ・ あと${recruitCountNum}名\n\n` +
+          `プレーフィー: ${playFeeNum.toLocaleString()}THB ・ あと${recruitCountNum}名\n` +
+          (isCompetition && competitionFee
+            ? `参加費: ${competitionFeeNum.toLocaleString()}THB\n`
+            : '') +
+          (note.trim() ? `補足: ${note.trim()}\n` : '') +
+          `\n` +
           `アプリ: https://golf-matching-app.vercel.app/`;
 
         if (participantUserIds.length > 0) {
@@ -153,6 +168,8 @@ export default function EditSchedulePage() {
       participants,
       isCompetition,
       competitionName,
+      competitionFee,
+      note,
       router,
     ]
   );
@@ -267,22 +284,46 @@ export default function EditSchedulePage() {
                 checked={isCompetition}
                 onChange={(e) => {
                   setIsCompetition(e.target.checked);
-                  if (!e.target.checked) setCompetitionName('');
+                  if (!e.target.checked) {
+                    setCompetitionName('');
+                    setCompetitionFee('');
+                    setNote('');
+                  }
                 }}
               />
               コンペ
             </label>
           </div>
           {isCompetition && (
-            <div className={styles.field}>
-              <label>コンペ名</label>
-              <input
-                type="text"
-                value={competitionName}
-                onChange={(e) => setCompetitionName(e.target.value)}
-                placeholder="例: 社内ゴルフコンペ"
-              />
-            </div>
+            <>
+              <div className={styles.field}>
+                <label>コンペ名</label>
+                <input
+                  type="text"
+                  value={competitionName}
+                  onChange={(e) => setCompetitionName(e.target.value)}
+                  placeholder="例: 社内ゴルフコンペ"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>参加費（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={competitionFee}
+                  onChange={(e) => setCompetitionFee(e.target.value)}
+                />
+              </div>
+              <div className={styles.field}>
+                <label>補足事項</label>
+                <input
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="例: 懇親会あり など"
+                />
+              </div>
+            </>
           )}
 
           <div className={styles.actions}>

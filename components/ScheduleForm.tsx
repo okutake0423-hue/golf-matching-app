@@ -32,6 +32,8 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
   const [maxPlayFee, setMaxPlayFee] = useState('');
   const [isCompetition, setIsCompetition] = useState(false);
   const [competitionName, setCompetitionName] = useState('');
+  const [competitionFee, setCompetitionFee] = useState('');
+  const [note, setNote] = useState('');
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -50,6 +52,10 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
             participants,
             isCompetition: isCompetition || undefined,
             competitionName: isCompetition ? competitionName : undefined,
+            competitionFee: isCompetition
+              ? Number(competitionFee) || 0
+              : undefined,
+            note: note.trim() || undefined,
           };
           await onSubmit(form);
         } else {
@@ -81,6 +87,8 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
       wishCourseName,
       wishArea,
       maxPlayFee,
+      competitionFee,
+      note,
       onSubmit,
     ]
   );
@@ -188,15 +196,36 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
             </label>
           </div>
           {isCompetition && (
-            <div className={styles.field}>
-              <label>コンペ名</label>
-              <input
-                type="text"
-                value={competitionName}
-                onChange={(e) => setCompetitionName(e.target.value)}
-                placeholder="例: 社内ゴルフコンペ"
-              />
-            </div>
+            <>
+              <div className={styles.field}>
+                <label>コンペ名</label>
+                <input
+                  type="text"
+                  value={competitionName}
+                  onChange={(e) => setCompetitionName(e.target.value)}
+                  placeholder="例: 社内ゴルフコンペ"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>参加費（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={competitionFee}
+                  onChange={(e) => setCompetitionFee(e.target.value)}
+                  placeholder="例: 500"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>補足事項</label>
+                <input
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="例: 懇親会あり など"
+                />
+              </div>
+            </>
           )}
         </>
       )}

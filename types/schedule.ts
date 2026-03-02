@@ -27,6 +27,8 @@ export interface ScheduleRecruit {
   golfCourseName: string;
   /** プレーフィー（THB） */
   playFee: number;
+  /** （コンペ時）参加費（THB） */
+  competitionFee?: number;
   /** 募集人数（あと○名の「○」） */
   recruitCount: number;
   /** 参加確定者リスト（表示名または userId） */
@@ -35,6 +37,8 @@ export interface ScheduleRecruit {
   isCompetition?: boolean;
   /** コンペ名（isCompetitionがtrueの場合） */
   competitionName?: string;
+  /** 補足事項（任意） */
+  note?: string;
   /** 月別取得用（YYYY-MM） */
   monthKey: string;
   createdAt: TimestampLike;
@@ -83,6 +87,8 @@ export interface ScheduleRecruitForm {
   participants: string[];
   isCompetition?: boolean;
   competitionName?: string;
+  competitionFee?: number;
+  note?: string;
 }
 
 /** フォーム：希望モード用 */

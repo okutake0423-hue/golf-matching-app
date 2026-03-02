@@ -53,10 +53,15 @@ export async function addSchedule(
       dateTime,
       golfCourseName: form.golfCourseName.trim(),
       playFee: Number(form.playFee) || 0,
+      competitionFee:
+        form.competitionFee != null
+          ? Number(form.competitionFee) || 0
+          : null,
       recruitCount: Number(form.recruitCount) || 0,
       participants: form.participants ?? [],
       isCompetition: form.isCompetition || null,
       competitionName: form.competitionName?.trim() || null,
+      note: (form.note ?? '').trim() || null,
       monthKey,
       createdAt: serverTimestamp(),
     };
@@ -109,10 +114,12 @@ export async function getSchedulesByMonth(
         dateTime: data.dateTime,
         golfCourseName: data.golfCourseName ?? '',
         playFee: data.playFee ?? 0,
+        competitionFee: data.competitionFee ?? null,
         recruitCount: data.recruitCount ?? 0,
         participants: data.participants ?? [],
         isCompetition: data.isCompetition ?? false,
         competitionName: data.competitionName,
+        note: data.note ?? '',
         monthKey: data.monthKey,
         createdAt: data.createdAt,
       } as ScheduleRecruit);
@@ -207,10 +214,12 @@ export async function getScheduleById(scheduleId: string): Promise<ScheduleDoc |
       dateTime: data.dateTime,
       golfCourseName: data.golfCourseName ?? '',
       playFee: data.playFee ?? 0,
+      competitionFee: data.competitionFee ?? null,
       recruitCount: data.recruitCount ?? 0,
       participants: data.participants ?? [],
       isCompetition: data.isCompetition ?? false,
       competitionName: data.competitionName,
+      note: data.note ?? '',
       monthKey: data.monthKey,
       createdAt: data.createdAt,
     } as ScheduleRecruit;
@@ -243,10 +252,12 @@ export async function updateSchedule(
     startTime: string;
     golfCourseName: string;
     playFee: number;
+    competitionFee?: number;
     recruitCount: number;
     participants: string[];
     isCompetition?: boolean;
     competitionName?: string | null;
+    note?: string | null;
   }
 ): Promise<void> {
   const ref = doc(db, SCHEDULES_COLLECTION, scheduleId);
@@ -258,10 +269,13 @@ export async function updateSchedule(
     dateTime,
     golfCourseName: updates.golfCourseName.trim(),
     playFee: updates.playFee,
+    competitionFee:
+      updates.competitionFee != null ? updates.competitionFee : null,
     recruitCount: updates.recruitCount,
     participants: updates.participants,
     isCompetition: updates.isCompetition ?? false,
     competitionName: updates.competitionName?.trim() || null,
+    note: updates.note?.trim() || null,
     monthKey,
   });
 }
