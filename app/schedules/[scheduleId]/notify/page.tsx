@@ -5,7 +5,12 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { initLiff, isLoggedIn } from '@/lib/liff';
 import { getSchedulesByMonth } from '@/lib/firestore-schedules';
-import { PROFILE_CHECKBOX_OPTIONS, type ProfileCheckboxValue } from '@/types/profile';
+import {
+  PROFILE_CHECKBOX_OPTIONS,
+  COMPANY_OPTIONS,
+  type ProfileCheckboxValue,
+  type CompanyValue,
+} from '@/types/profile';
 import type { ScheduleRecruit } from '@/types/schedule';
 import styles from './notify.module.css';
 
@@ -17,6 +22,7 @@ export default function NotifyPage() {
   const [ready, setReady] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleRecruit | null>(null);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<ProfileCheckboxValue[]>([]);
+  const [companyName, setCompanyName] = useState<CompanyValue>('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,8 +83,9 @@ export default function NotifyPage() {
   }, []);
 
   const handleSend = useCallback(async () => {
-    if (!schedule || selectedCheckboxes.length === 0) {
-      setError('少なくとも1つの項目を選択してください');
+    if (!schedule) return;
+    if (selectedCheckboxes.length === 0 && !companyName) {
+      setError('会社名または少なくとも1つの通知受取りグループを選択してください');
       return;
     }
 
@@ -90,6 +97,7 @@ export default function NotifyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileCheckboxes: selectedCheckboxes,
+          companyName: companyName || undefined,
           scheduleInfo: {
             dateStr: schedule.dateStr,
             startTime: schedule.startTime,
@@ -163,7 +171,7 @@ export default function NotifyPage() {
     } finally {
       setIsSending(false);
     }
-  }, [schedule, selectedCheckboxes, router]);
+  }, [schedule, selectedCheckboxes, companyName, router]);
 
   if (!ready || loading) {
     return (
@@ -213,6 +221,21 @@ export default function NotifyPage() {
           {schedule.isCompetition && schedule.competitionName && (
             <p><strong>コンペ名:</strong> {schedule.competitionName}</p>
           )}
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>会社名（任意）</label>
+          <select
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value as CompanyValue)}
+            className={styles.select}
+          >
+            {COMPANY_OPTIONS.map((opt) => (
+              <option key={opt.value || 'all'} value={opt.value}>
+                {opt.label || '全社'}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.field}>

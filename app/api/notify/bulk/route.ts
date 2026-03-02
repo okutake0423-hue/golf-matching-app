@@ -6,13 +6,26 @@ import type { ProfileCheckboxValue } from '@/types/profile';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { profileCheckboxes, scheduleInfo, mahjongRecruitNotify } = await request.json();
+    const {
+      profileCheckboxes,
+      scheduleInfo,
+      mahjongRecruitNotify,
+      companyName,
+    } = await request.json();
 
     const isMahjongRecruitMode = mahjongRecruitNotify === true;
+    const hasProfileCheckboxes =
+      Array.isArray(profileCheckboxes) && profileCheckboxes.length > 0;
+    const hasCompanyFilter =
+      typeof companyName === 'string' && companyName.trim() !== '';
 
-    if (!isMahjongRecruitMode && (!profileCheckboxes || !Array.isArray(profileCheckboxes) || profileCheckboxes.length === 0)) {
+    if (
+      !isMahjongRecruitMode &&
+      !hasCompanyFilter &&
+      !hasProfileCheckboxes
+    ) {
       return NextResponse.json(
-        { message: 'プロフィール項目が指定されていません' },
+        { message: '会社名またはプロフィール項目が指定されていません' },
         { status: 400 }
       );
     }
@@ -40,7 +53,13 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('[Bulk Notify] 通知送信開始:', {
-      profileCheckboxes: isMahjongRecruitMode ? 'mahjongRecruitNotify' : profileCheckboxes,
+      mode: isMahjongRecruitMode
+        ? 'mahjongRecruitNotify'
+        : hasCompanyFilter
+        ? 'companyName + profileCheckboxes'
+        : 'profileCheckboxes',
+      companyName: hasCompanyFilter ? companyName : undefined,
+      profileCheckboxes: isMahjongRecruitMode ? undefined : profileCheckboxes,
       scheduleInfo,
       channelAccessTokenSet: !!channelAccessToken,
     });
@@ -188,15 +207,32 @@ export async function POST(request: NextRequest) {
           .where('mahjongRecruitNotify', '==', true)
           .get();
       } else {
-        // ゴルフ: array-contains-any でプロフィール項目に該当するユーザーを検索
-        querySnapshot = await usersRef
-          .where('profileCheckboxes', 'array-contains-any', profileCheckboxes)
-          .get();
+        // ゴルフ: 会社名とプロフィールチェックボックスでフィルタ
+        let queryRef: FirebaseFirestore.Query = usersRef;
+
+        if (hasCompanyFilter) {
+          queryRef = queryRef.where('companyName', '==', companyName);
+        }
+        if (hasProfileCheckboxes) {
+          queryRef = queryRef.where(
+            'profileCheckboxes',
+            'array-contains-any',
+            profileCheckboxes as ProfileCheckboxValue[]
+          );
+        }
+
+        querySnapshot = await queryRef.get();
       }
       
       console.log('[Bulk Notify] Firestoreクエリ成功:', {
         querySize: querySnapshot.size,
-        mode: isMahjongRecruitMode ? 'mahjongRecruitNotify' : 'profileCheckboxes',
+        mode: isMahjongRecruitMode
+          ? 'mahjongRecruitNotify'
+          : hasCompanyFilter && hasProfileCheckboxes
+          ? 'companyName + profileCheckboxes'
+          : hasCompanyFilter
+          ? 'companyName'
+          : 'profileCheckboxes',
       });
     } catch (queryError) {
       console.error('[Bulk Notify] Firestoreクエリエラー:', {
@@ -233,24 +269,44 @@ export async function POST(request: NextRequest) {
           targetUserIds.push(userId);
         }
       } else {
-        const userCheckboxes = data.profileCheckboxes || [];
-        const hasMatchingCheckbox = profileCheckboxes.some((checkbox: ProfileCheckboxValue) =>
-          userCheckboxes.includes(checkbox)
-        );
-        if (hasMatchingCheckbox && userId) {
+        // 会社フィルタとプロフィール項目フィルタは Firestore クエリ側でも掛かっているが、
+        // 念のためここでもチェックしておく
+        if (hasCompanyFilter && data.companyName !== companyName) {
+          return;
+        }
+
+        if (hasProfileCheckboxes) {
+          const userCheckboxes = data.profileCheckboxes || [];
+          const hasMatchingCheckbox = (profileCheckboxes as ProfileCheckboxValue[]).some(
+            (checkbox) => userCheckboxes.includes(checkbox)
+          );
+          if (hasMatchingCheckbox && userId) {
+            targetUserIds.push(userId);
+          }
+        } else if (userId) {
+          // プロフィール項目を指定していない場合は会社フィルタのみで対象とする
           targetUserIds.push(userId);
         }
       }
     });
 
     console.log('[Bulk Notify] 検索結果:', {
-      mode: isMahjongRecruitMode ? 'mahjongRecruitNotify' : 'profileCheckboxes',
+      mode: isMahjongRecruitMode
+        ? 'mahjongRecruitNotify'
+        : hasCompanyFilter && hasProfileCheckboxes
+        ? 'companyName + profileCheckboxes'
+        : hasCompanyFilter
+        ? 'companyName'
+        : 'profileCheckboxes',
+      companyName: hasCompanyFilter ? companyName : undefined,
       foundUsers: targetUserIds.length,
       userIds: targetUserIds.slice(0, 5),
     });
 
     const noUsersMessage = isMahjongRecruitMode
       ? '該当するユーザーが見つかりませんでした。麻雀プロフィールで「募集通知受取り」をONにしているユーザーがいない可能性があります。'
+      : hasCompanyFilter
+      ? `該当するユーザーが見つかりませんでした。会社名「${companyName}」のユーザーがいない可能性があります。`
       : '該当するユーザーが見つかりませんでした。プロフィール項目を選択しているユーザーがいない可能性があります。';
 
     if (targetUserIds.length === 0) {

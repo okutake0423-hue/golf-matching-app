@@ -121,7 +121,7 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules, onMahjo
         )}
         {onEdit && (
           <button type="button" onClick={onEdit} className={styles.buttonEdit}>
-            編集
+            プロフィール編集
           </button>
         )}
         {onLogout && (
