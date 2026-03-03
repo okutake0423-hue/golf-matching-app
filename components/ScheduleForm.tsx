@@ -34,6 +34,13 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
   const [competitionName, setCompetitionName] = useState('');
   const [competitionFee, setCompetitionFee] = useState('');
   const [note, setNote] = useState('');
+  const [reservationName, setReservationName] = useState('');
+  const [meetingTime, setMeetingTime] = useState('');
+  const [competitionPlayFee, setCompetitionPlayFee] = useState('');
+  const [competitionPlayFeeKuratthai, setCompetitionPlayFeeKuratthai] =
+    useState('');
+  const [caddieFee, setCaddieFee] = useState('');
+  const [cartFee, setCartFee] = useState('');
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -56,6 +63,22 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
               ? Number(competitionFee) || 0
               : undefined,
             note: note.trim() || undefined,
+            reservationName: isCompetition
+              ? reservationName.trim() || undefined
+              : undefined,
+            meetingTime: isCompetition
+              ? meetingTime.trim() || undefined
+              : undefined,
+            competitionPlayFee: isCompetition
+              ? Number(competitionPlayFee) || 0
+              : undefined,
+            competitionPlayFeeKuratthai: isCompetition
+              ? Number(competitionPlayFeeKuratthai) || 0
+              : undefined,
+            caddieFee: isCompetition
+              ? Number(caddieFee) || 0
+              : undefined,
+            cartFee: isCompetition ? Number(cartFee) || 0 : undefined,
           };
           await onSubmit(form);
         } else {
@@ -89,6 +112,12 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
       maxPlayFee,
       competitionFee,
       note,
+      reservationName,
+      meetingTime,
+      competitionPlayFee,
+      competitionPlayFeeKuratthai,
+      caddieFee,
+      cartFee,
       onSubmit,
     ]
   );
@@ -189,6 +218,14 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
                   setIsCompetition(e.target.checked);
                   if (!e.target.checked) {
                     setCompetitionName('');
+                    setCompetitionFee('');
+                    setReservationName('');
+                    setMeetingTime('');
+                    setCompetitionPlayFee('');
+                    setCompetitionPlayFeeKuratthai('');
+                    setCaddieFee('');
+                    setCartFee('');
+                    setNote('');
                   }
                 }}
               />
@@ -204,6 +241,65 @@ export function ScheduleForm({ posterId, defaultDateStr, onSubmit }: Props) {
                   value={competitionName}
                   onChange={(e) => setCompetitionName(e.target.value)}
                   placeholder="例: 社内ゴルフコンペ"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>予約名</label>
+                <input
+                  type="text"
+                  value={reservationName}
+                  onChange={(e) => setReservationName(e.target.value)}
+                  placeholder="例: 山田太郎様"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>集合時間</label>
+                <input
+                  type="time"
+                  value={meetingTime}
+                  onChange={(e) => setMeetingTime(e.target.value)}
+                />
+              </div>
+              <div className={styles.field}>
+                <label>プレーフィー（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={competitionPlayFee}
+                  onChange={(e) => setCompetitionPlayFee(e.target.value)}
+                  placeholder="例: 2000"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>プレーフィー（クラタイ）（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={competitionPlayFeeKuratthai}
+                  onChange={(e) =>
+                    setCompetitionPlayFeeKuratthai(e.target.value)
+                  }
+                  placeholder="例: 1500"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>キャディーフィー（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={caddieFee}
+                  onChange={(e) => setCaddieFee(e.target.value)}
+                  placeholder="例: 400"
+                />
+              </div>
+              <div className={styles.field}>
+                <label>カートフィー（THB）</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={cartFee}
+                  onChange={(e) => setCartFee(e.target.value)}
+                  placeholder="例: 500"
                 />
               </div>
               <div className={styles.field}>

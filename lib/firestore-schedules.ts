@@ -57,6 +57,20 @@ export async function addSchedule(
         form.competitionFee != null
           ? Number(form.competitionFee) || 0
           : null,
+      reservationName: (form.reservationName ?? '').trim() || null,
+      meetingTime: (form.meetingTime ?? '').trim() || null,
+      competitionPlayFee:
+        form.competitionPlayFee != null
+          ? Number(form.competitionPlayFee) || 0
+          : null,
+      competitionPlayFeeKuratthai:
+        form.competitionPlayFeeKuratthai != null
+          ? Number(form.competitionPlayFeeKuratthai) || 0
+          : null,
+      caddieFee:
+        form.caddieFee != null ? Number(form.caddieFee) || 0 : null,
+      cartFee:
+        form.cartFee != null ? Number(form.cartFee) || 0 : null,
       recruitCount: Number(form.recruitCount) || 0,
       participants: form.participants ?? [],
       isCompetition: form.isCompetition || null,
@@ -115,6 +129,12 @@ export async function getSchedulesByMonth(
         golfCourseName: data.golfCourseName ?? '',
         playFee: data.playFee ?? 0,
         competitionFee: data.competitionFee ?? null,
+         reservationName: data.reservationName ?? '',
+         meetingTime: data.meetingTime ?? '',
+         competitionPlayFee: data.competitionPlayFee ?? null,
+         competitionPlayFeeKuratthai: data.competitionPlayFeeKuratthai ?? null,
+         caddieFee: data.caddieFee ?? null,
+         cartFee: data.cartFee ?? null,
         recruitCount: data.recruitCount ?? 0,
         participants: data.participants ?? [],
         isCompetition: data.isCompetition ?? false,
@@ -215,6 +235,12 @@ export async function getScheduleById(scheduleId: string): Promise<ScheduleDoc |
       golfCourseName: data.golfCourseName ?? '',
       playFee: data.playFee ?? 0,
       competitionFee: data.competitionFee ?? null,
+      reservationName: data.reservationName ?? '',
+      meetingTime: data.meetingTime ?? '',
+      competitionPlayFee: data.competitionPlayFee ?? null,
+      competitionPlayFeeKuratthai: data.competitionPlayFeeKuratthai ?? null,
+      caddieFee: data.caddieFee ?? null,
+      cartFee: data.cartFee ?? null,
       recruitCount: data.recruitCount ?? 0,
       participants: data.participants ?? [],
       isCompetition: data.isCompetition ?? false,
@@ -253,6 +279,12 @@ export async function updateSchedule(
     golfCourseName: string;
     playFee: number;
     competitionFee?: number;
+    reservationName?: string | null;
+    meetingTime?: string | null;
+    competitionPlayFee?: number;
+    competitionPlayFeeKuratthai?: number;
+    caddieFee?: number;
+    cartFee?: number;
     recruitCount: number;
     participants: string[];
     isCompetition?: boolean;
@@ -271,6 +303,20 @@ export async function updateSchedule(
     playFee: updates.playFee,
     competitionFee:
       updates.competitionFee != null ? updates.competitionFee : null,
+    reservationName: updates.reservationName?.trim() || null,
+    meetingTime: updates.meetingTime?.trim() || null,
+    competitionPlayFee:
+      updates.competitionPlayFee != null
+        ? updates.competitionPlayFee
+        : null,
+    competitionPlayFeeKuratthai:
+      updates.competitionPlayFeeKuratthai != null
+        ? updates.competitionPlayFeeKuratthai
+        : null,
+    caddieFee:
+      updates.caddieFee != null ? updates.caddieFee : null,
+    cartFee:
+      updates.cartFee != null ? updates.cartFee : null,
     recruitCount: updates.recruitCount,
     participants: updates.participants,
     isCompetition: updates.isCompetition ?? false,

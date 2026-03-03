@@ -29,6 +29,18 @@ export interface ScheduleRecruit {
   playFee: number;
   /** （コンペ時）参加費（THB） */
   competitionFee?: number;
+  /** （コンペ時）予約名 */
+  reservationName?: string;
+  /** （コンペ時）集合時間（HH:mm） */
+  meetingTime?: string;
+  /** （コンペ時）プレーフィー（THB） */
+  competitionPlayFee?: number;
+  /** （コンペ時）プレーフィー（クラタイ）（THB） */
+  competitionPlayFeeKuratthai?: number;
+  /** （コンペ時）キャディーフィー（THB） */
+  caddieFee?: number;
+  /** （コンペ時）カートフィー（THB） */
+  cartFee?: number;
   /** 募集人数（あと○名の「○」） */
   recruitCount: number;
   /** 参加確定者リスト（表示名または userId） */
@@ -89,6 +101,12 @@ export interface ScheduleRecruitForm {
   competitionName?: string;
   competitionFee?: number;
   note?: string;
+  reservationName?: string;
+  meetingTime?: string;
+  competitionPlayFee?: number;
+  competitionPlayFeeKuratthai?: number;
+  caddieFee?: number;
+  cartFee?: number;
 }
 
 /** フォーム：希望モード用 */
