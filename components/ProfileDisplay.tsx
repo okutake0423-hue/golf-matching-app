@@ -7,12 +7,13 @@ import styles from './ProfileDisplay.module.css';
 type Props = {
   profile: UserProfileDisplay;
   onEdit?: () => void;
+  onProfileRegistrants?: () => void;
   onLogout?: () => void;
   onSchedules?: () => void;
   onMahjongSchedules?: () => void;
 };
 
-export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules, onMahjongSchedules }: Props) {
+export function ProfileDisplay({ profile, onEdit, onProfileRegistrants, onLogout, onSchedules, onMahjongSchedules }: Props) {
   const playStyleLabel =
     (PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
       profile.playStyle) ||
@@ -122,6 +123,11 @@ export function ProfileDisplay({ profile, onEdit, onLogout, onSchedules, onMahjo
         {onEdit && (
           <button type="button" onClick={onEdit} className={styles.buttonEdit}>
             プロフィール編集
+          </button>
+        )}
+        {onProfileRegistrants && (
+          <button type="button" onClick={onProfileRegistrants} className={styles.buttonEdit}>
+            プロフィール登録者
           </button>
         )}
         {onLogout && (

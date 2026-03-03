@@ -119,6 +119,10 @@ export default function Home() {
     router.push('/profile/edit');
   };
 
+  const handleProfileRegistrants = () => {
+    router.push('/profile/registrants');
+  };
+
   const handleSchedules = () => {
     router.push('/schedules');
   };
@@ -205,6 +209,7 @@ export default function Home() {
           <ProfileDisplay
             profile={profile}
             onEdit={handleEdit}
+            onProfileRegistrants={handleProfileRegistrants}
             onLogout={handleLogout}
             onSchedules={handleSchedules}
             onMahjongSchedules={handleMahjongSchedules}
