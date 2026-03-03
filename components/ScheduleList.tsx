@@ -260,6 +260,24 @@ function RecruitCard({
           </button>
           {showCompetitionDetail && (
             <div className={styles.competitionDetail}>
+              {schedule.reservationName && schedule.reservationName.trim() && (
+                <p>予約名: {schedule.reservationName}</p>
+              )}
+              {schedule.meetingTime && (
+                <p>集合時間: {schedule.meetingTime}</p>
+              )}
+              {schedule.competitionPlayFee != null && (
+                <p>プレーフィー: {Number(schedule.competitionPlayFee).toLocaleString()}THB</p>
+              )}
+              {schedule.competitionPlayFeeKuratthai != null && (
+                <p>プレーフィー（クラタイ）: {Number(schedule.competitionPlayFeeKuratthai).toLocaleString()}THB</p>
+              )}
+              {schedule.caddieFee != null && (
+                <p>キャディーフィー: {Number(schedule.caddieFee).toLocaleString()}THB</p>
+              )}
+              {schedule.cartFee != null && (
+                <p>カートフィー: {Number(schedule.cartFee).toLocaleString()}THB</p>
+              )}
               {schedule.competitionFee != null && (
                 <p>参加費: {Number(schedule.competitionFee).toLocaleString()}THB</p>
               )}

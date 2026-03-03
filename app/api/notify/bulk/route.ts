@@ -332,6 +332,24 @@ export async function POST(request: NextRequest) {
     // コンペ詳細情報（ゴルフ募集時のみ、存在する項目だけ追記）
     if (scheduleInfo.isCompetition && scheduleInfo.golfCourseName) {
       const detailLines: string[] = [];
+      if (scheduleInfo.reservationName && String(scheduleInfo.reservationName).trim()) {
+        detailLines.push(`予約名: ${String(scheduleInfo.reservationName).trim()}`);
+      }
+      if (scheduleInfo.meetingTime != null && String(scheduleInfo.meetingTime).trim()) {
+        detailLines.push(`集合時間: ${String(scheduleInfo.meetingTime).trim()}`);
+      }
+      if (scheduleInfo.competitionPlayFee != null) {
+        detailLines.push(`プレーフィー: ${(Number(scheduleInfo.competitionPlayFee) || 0).toLocaleString()}THB`);
+      }
+      if (scheduleInfo.competitionPlayFeeKuratthai != null) {
+        detailLines.push(`プレーフィー（クラタイ）: ${(Number(scheduleInfo.competitionPlayFeeKuratthai) || 0).toLocaleString()}THB`);
+      }
+      if (scheduleInfo.caddieFee != null) {
+        detailLines.push(`キャディーフィー: ${(Number(scheduleInfo.caddieFee) || 0).toLocaleString()}THB`);
+      }
+      if (scheduleInfo.cartFee != null) {
+        detailLines.push(`カートフィー: ${(Number(scheduleInfo.cartFee) || 0).toLocaleString()}THB`);
+      }
       if (scheduleInfo.competitionFee != null) {
         const fee = Number(scheduleInfo.competitionFee) || 0;
         detailLines.push(`参加費: ${fee.toLocaleString()}THB`);
