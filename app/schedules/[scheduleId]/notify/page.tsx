@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { initLiff, isLoggedIn } from '@/lib/liff';
-import { getSchedulesByMonth } from '@/lib/firestore-schedules';
+import { getScheduleById } from '@/lib/firestore-schedules';
 import {
   PROFILE_CHECKBOX_OPTIONS,
   COMPANY_OPTIONS,
@@ -49,20 +49,15 @@ export default function NotifyPage() {
       if (!scheduleId || !ready) return;
 
       try {
-        // 現在の月の予定を取得（簡易実装）
-        const now = new Date();
-        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const schedules = await getSchedulesByMonth(monthKey);
-        
-        const found = schedules.find((s) => s.id === scheduleId && s.type === 'RECRUIT') as ScheduleRecruit | undefined;
-        
-        if (!found) {
+        // IDで予定を取得（翌月などどの月の予定でも表示可能）
+        const doc = await getScheduleById(scheduleId);
+        if (!doc || doc.type !== 'RECRUIT') {
           setError('予定が見つかりません');
           setLoading(false);
           return;
         }
 
-        setSchedule(found);
+        setSchedule(doc as ScheduleRecruit);
       } catch (err) {
         console.error('Failed to load schedule:', err);
         setError('予定の読み込みに失敗しました');
