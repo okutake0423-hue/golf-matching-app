@@ -104,6 +104,9 @@ export default function NotifyPage() {
             golfCourseName: schedule.golfCourseName,
             isCompetition: schedule.isCompetition ?? false,
             competitionName: schedule.competitionName,
+            competitionFee: schedule.competitionFee,
+            note: schedule.note,
+            participants: schedule.participants ?? [],
           },
         }),
       });

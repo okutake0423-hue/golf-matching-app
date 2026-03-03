@@ -325,9 +325,33 @@ export async function POST(request: NextRequest) {
     const timeLine = scheduleInfo.playTimeSlot != null
       ? `時間帯: ${scheduleInfo.playTimeSlot}${scheduleInfo.expectedPlayTime ? ` / ${scheduleInfo.expectedPlayTime}` : ''}`
       : `時間: ${scheduleInfo.startTime || ''}`;
-    const scheduleText = scheduleInfo.isCompetition && scheduleInfo.competitionName
+    let scheduleText = scheduleInfo.isCompetition && scheduleInfo.competitionName
       ? `【${scheduleInfo.competitionName}】\n日付: ${scheduleInfo.dateStr}\n${timeLine}\n${venueLabel}: ${venueValue}`
       : `日付: ${scheduleInfo.dateStr}\n${timeLine}\n${venueLabel}: ${venueValue}`;
+
+    // コンペ詳細情報（ゴルフ募集時のみ、存在する項目だけ追記）
+    if (scheduleInfo.isCompetition && scheduleInfo.golfCourseName) {
+      const detailLines: string[] = [];
+      if (scheduleInfo.competitionFee != null) {
+        const fee = Number(scheduleInfo.competitionFee) || 0;
+        detailLines.push(`参加費: ${fee.toLocaleString()}THB`);
+      }
+      if (scheduleInfo.note && String(scheduleInfo.note).trim()) {
+        detailLines.push(`補足事項: ${String(scheduleInfo.note).trim()}`);
+      }
+      if (detailLines.length > 0) {
+        scheduleText += `\n` + detailLines.join('\n');
+      }
+    }
+
+    // 現在の参加者一覧（あれば）
+    if (Array.isArray(scheduleInfo.participants) && scheduleInfo.participants.length > 0) {
+      const names = (scheduleInfo.participants as string[]).map((p) => {
+        const parts = p.split(':');
+        return parts.length === 2 ? parts[1] : p;
+      });
+      scheduleText += `\n参加者: ${names.join(', ')}`;
+    }
 
     const headerText = scheduleInfo.venueName != null ? '新しい麻雀予定が投稿されました！' : '新しいゴルフ予定が投稿されました！';
     const message = {

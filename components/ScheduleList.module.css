@@ -75,6 +75,28 @@
   color: #333;
 }
 
+.detailLink {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1976d2;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.detailLink:hover {
+  color: #0d47a1;
+}
+
+.competitionDetail {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.4;
+}
+
 .participants {
   margin: 6px 0 0;
   font-size: 12px;

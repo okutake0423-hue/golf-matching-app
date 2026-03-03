@@ -32,9 +32,40 @@ export async function POST(request: NextRequest) {
     const timeText = scheduleInfo.playTimeSlot != null
       ? `時間帯: ${scheduleInfo.playTimeSlot}${scheduleInfo.expectedPlayTime ? ` / ${scheduleInfo.expectedPlayTime}` : ''}`
       : `時間: ${scheduleInfo.startTime || ''}`;
+
+    // 参加者リスト（オーナー向けに現在の参加者を表示）
+    let participantsLine = '';
+    if (Array.isArray(scheduleInfo.participants) && scheduleInfo.participants.length > 0) {
+      const names = (scheduleInfo.participants as string[]).map((p) => {
+        const parts = p.split(':');
+        return parts.length === 2 ? parts[1] : p;
+      });
+      participantsLine = `参加者: ${names.join(', ')}\n`;
+    }
+
+    let bodyText =
+      `${participantName}さんが以下の予定に参加しました。\n\n` +
+      `日付: ${scheduleInfo.dateStr}\n` +
+      `${timeText}\n` +
+      `${venueLabel}: ${venueValue}\n` +
+      participantsLine;
+
+    // コンペ詳細（ゴルフ募集時のみ）
+    if (scheduleInfo.isCompetition && scheduleInfo.golfCourseName) {
+      if (scheduleInfo.competitionFee != null) {
+        const fee = Number(scheduleInfo.competitionFee) || 0;
+        bodyText += `参加費: ${fee.toLocaleString()}THB\n`;
+      }
+      if (scheduleInfo.note && String(scheduleInfo.note).trim()) {
+        bodyText += `補足事項: ${String(scheduleInfo.note).trim()}\n`;
+      }
+    }
+
+    bodyText += `残り人数: ${scheduleInfo.remainingCount}名\n\nアプリ: ${appUrl}`;
+
     const message = {
       type: 'text',
-      text: `${participantName}さんが以下の予定に参加しました。\n\n日付: ${scheduleInfo.dateStr}\n${timeText}\n${venueLabel}: ${venueValue}\n残り人数: ${scheduleInfo.remainingCount}名\n\nアプリ: ${appUrl}`,
+      text: bodyText,
     };
 
     const response = await fetch('https://api.line.me/v2/bot/message/push', {

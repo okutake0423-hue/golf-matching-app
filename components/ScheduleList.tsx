@@ -88,6 +88,7 @@ function RecruitCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showCompetitionDetail, setShowCompetitionDetail] = useState(false);
   const participants = schedule.participants ?? [];
   const playFee = Number(schedule.playFee) || 0;
   const recruitCount = Number(schedule.recruitCount) || 0;
@@ -248,6 +249,27 @@ function RecruitCard({
       <p className={styles.detail}>
         プレーフィー {playFee.toLocaleString()}THB ・ あと{recruitCount}名
       </p>
+      {isCompetition && (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowCompetitionDetail((v) => !v)}
+            className={styles.detailLink}
+          >
+            {showCompetitionDetail ? 'コンペ詳細を閉じる' : 'コンペ詳細を見る'}
+          </button>
+          {showCompetitionDetail && (
+            <div className={styles.competitionDetail}>
+              {schedule.competitionFee != null && (
+                <p>参加費: {Number(schedule.competitionFee).toLocaleString()}THB</p>
+              )}
+              {schedule.note && schedule.note.trim() && (
+                <p>補足事項: {schedule.note}</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
       {participants.length > 0 && (
         <p className={styles.participants}>
           参加:{' '}

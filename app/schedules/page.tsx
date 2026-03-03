@@ -126,6 +126,11 @@ export default function SchedulesPage() {
         const schedule = schedules.find((s) => s.id === scheduleId) as ScheduleRecruit | undefined;
         if (schedule && schedule.type === 'RECRUIT') {
           try {
+            // 現在の参加者（新規参加者も含める）
+            const currentParticipants = schedule.participants ?? [];
+            const participantEntry = userId ? `${userId}:${participantName}` : participantName;
+            const allParticipants = [...currentParticipants, participantEntry];
+
             await fetch('/api/notify/line', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -136,6 +141,11 @@ export default function SchedulesPage() {
                   dateStr: schedule.dateStr,
                   startTime: schedule.startTime,
                   golfCourseName: schedule.golfCourseName,
+                  isCompetition: schedule.isCompetition ?? false,
+                  competitionName: schedule.competitionName,
+                  competitionFee: schedule.competitionFee,
+                  note: schedule.note,
+                  participants: allParticipants,
                   remainingCount: result.remainingCount,
                 },
               }),
