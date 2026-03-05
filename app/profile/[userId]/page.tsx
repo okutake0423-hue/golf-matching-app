@@ -39,7 +39,7 @@ export default function UserProfilePage() {
           return;
         }
 
-        // UserProfileDisplay形式に変換
+        // UserProfileDisplay形式に変換（ゴルフ + 麻雀プロフィールをすべてマッピング）
         const displayProfile: UserProfileDisplay = {
           userId: userProfile.userId,
           displayName: userProfile.displayName,
@@ -49,6 +49,9 @@ export default function UserProfilePage() {
           averageScore: userProfile.averageScore ?? null,
           playStyle: userProfile.playStyle ?? '',
           profileCheckboxes: userProfile.profileCheckboxes ?? [],
+          mahjongLevel: userProfile.mahjongLevel ?? '',
+          favoriteYaku: userProfile.favoriteYaku ?? '',
+          mahjongRecruitNotify: userProfile.mahjongRecruitNotify ?? false,
         };
 
         setProfile(displayProfile);
