@@ -131,6 +131,10 @@ export default function Home() {
     router.push('/mahjong');
   };
 
+  const handleMatsushitaKai = () => {
+    router.push('/matsushita-kai');
+  };
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -213,6 +217,7 @@ export default function Home() {
             onLogout={handleLogout}
             onSchedules={handleSchedules}
             onMahjongSchedules={handleMahjongSchedules}
+            onMatsushitaKai={handleMatsushitaKai}
           />
         ) : (
           <div className={styles.login}>

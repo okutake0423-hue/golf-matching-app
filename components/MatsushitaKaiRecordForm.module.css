@@ -1,0 +1,173 @@
+.form {
+  text-align: left;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.sectionTitle {
+  font-size: 17px;
+  font-weight: bold;
+  margin-top: 28px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.hint {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.error {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #06c755;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  vertical-align: middle;
+}
+
+.table th {
+  background: #f5f5f5;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.cellInput {
+  width: 100%;
+  min-width: 100px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.cellNum {
+  width: 64px;
+  max-width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.rowRemove {
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: #333;
+}
+
+.rowRemove:hover:not(:disabled) {
+  background: #ddd;
+}
+
+.rowRemove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.addRow {
+  background: #fff;
+  color: #06c755;
+  border: 2px solid #06c755;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.addRow:hover:not(:disabled) {
+  background: #f0fff4;
+}
+
+.actions {
+  margin-top: 24px;
+}
+
+.buttonSubmit {
+  background-color: #06c755;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 320px;
+}
+
+.buttonSubmit:hover:not(:disabled) {
+  background-color: #05b048;
+}
+
+.buttonSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
