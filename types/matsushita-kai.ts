@@ -40,3 +40,22 @@ export function emptyMatsushitaParticipantRow(): MatsushitaKaiParticipantRow {
     rank: null,
   };
 }
+
+/** Firestore から取得した1件（一覧・編集用） */
+export interface MatsushitaKaiRecordDoc {
+  id: string;
+  competitionName: string;
+  golfCourseName: string;
+  dateStr: string;
+  participants: MatsushitaKaiParticipantRow[];
+  createdByUserId?: string;
+}
+
+/** 一覧行の表示用 */
+export interface MatsushitaKaiRecordListItem {
+  id: string;
+  competitionName: string;
+  golfCourseName: string;
+  dateStr: string;
+  participantCount: number;
+}

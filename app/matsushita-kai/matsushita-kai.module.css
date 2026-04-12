@@ -44,3 +44,106 @@
 .backLink:hover {
   text-decoration: underline;
 }
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 8px;
+  color: #333;
+}
+
+.lead {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.toolbar {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.primaryLink {
+  display: inline-block;
+  background: #06c755;
+  color: #fff;
+  font-weight: bold;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.primaryLink:hover {
+  background: #05b048;
+}
+
+.empty {
+  text-align: center;
+  color: #666;
+  padding: 32px 16px;
+  font-size: 15px;
+}
+
+.listTableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.listTable {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.listTable th,
+.listTable td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.listTable th {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.colActions {
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.inlineLink {
+  color: #06c755;
+  font-weight: bold;
+  text-decoration: none;
+  margin-right: 12px;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}
+
+.deleteBtn {
+  background: #fff;
+  color: #c33;
+  border: 1px solid #c33;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #fff5f5;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

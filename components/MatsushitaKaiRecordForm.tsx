@@ -21,19 +21,51 @@ function parseNum(s: string): number | null {
 }
 
 type Props = {
+  mode?: 'create' | 'edit';
+  /** 編集時の初期値（マウント時にのみ使用） */
+  initialData?: MatsushitaKaiRecordFormData;
   onSubmit: (data: MatsushitaKaiRecordFormData) => Promise<void>;
   submitting?: boolean;
 };
 
-export function MatsushitaKaiRecordForm({ onSubmit, submitting }: Props) {
-  const [competitionName, setCompetitionName] = useState('松下会');
-  const [golfCourseName, setGolfCourseName] = useState('');
-  const [dateStr, setDateStr] = useState(todayDateStr());
-  const [rows, setRows] = useState<MatsushitaKaiParticipantRow[]>(() => [
+function rowsFromInitial(initialData?: MatsushitaKaiRecordFormData): MatsushitaKaiParticipantRow[] {
+  if (initialData?.participants?.length) {
+    return initialData.participants.map((p) => ({
+      ...emptyMatsushitaParticipantRow(),
+      displayName: p.displayName ?? '',
+      group: p.group ?? '',
+      grossOut: p.grossOut ?? null,
+      grossIn: p.grossIn ?? null,
+      handicap: p.handicap ?? null,
+      netScore: p.netScore ?? null,
+      rank: p.rank ?? null,
+    }));
+  }
+  return [
     emptyMatsushitaParticipantRow(),
     emptyMatsushitaParticipantRow(),
     emptyMatsushitaParticipantRow(),
-  ]);
+  ];
+}
+
+export function MatsushitaKaiRecordForm({
+  mode = 'create',
+  initialData,
+  onSubmit,
+  submitting,
+}: Props) {
+  const [competitionName, setCompetitionName] = useState(
+    () => initialData?.competitionName ?? '松下会'
+  );
+  const [golfCourseName, setGolfCourseName] = useState(
+    () => initialData?.golfCourseName ?? ''
+  );
+  const [dateStr, setDateStr] = useState(
+    () => initialData?.dateStr ?? todayDateStr()
+  );
+  const [rows, setRows] = useState<MatsushitaKaiParticipantRow[]>(() =>
+    rowsFromInitial(initialData)
+  );
   const [error, setError] = useState<string | null>(null);
 
   const updateRow = useCallback(
@@ -98,9 +130,20 @@ export function MatsushitaKaiRecordForm({ onSubmit, submitting }: Props) {
     [competitionName, golfCourseName, dateStr, rows, onSubmit]
   );
 
+  const title =
+    mode === 'edit' ? '松下会 記録を編集' : '松下会 記録を入力';
+  const submitLabel =
+    mode === 'edit'
+      ? submitting
+        ? '更新中...'
+        : '更新する'
+      : submitting
+        ? '保存中...'
+        : '記録を保存';
+
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h2 className={styles.title}>松下会 記録を入力</h2>
+      <h2 className={styles.title}>{title}</h2>
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.field}>
@@ -294,7 +337,7 @@ export function MatsushitaKaiRecordForm({ onSubmit, submitting }: Props) {
           className={styles.buttonSubmit}
           disabled={submitting}
         >
-          {submitting ? '保存中...' : '記録を保存'}
+          {submitLabel}
         </button>
       </div>
     </form>
