@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * 募集の参加者に案内メッセージをLINEで一括送信するAPI
+ * 募集の起案者・参加者に案内メッセージをLINEで一括送信するAPI
+ * participantUserIds: 起案者を含む送信先のLINEユーザーID一覧（クライアントでマージ済み）
  */
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(participantUserIds) || participantUserIds.length === 0) {
       return NextResponse.json(
-        { message: '送信先の参加者がいません', sent: false },
+        { message: '送信先がありません', sent: false },
         { status: 400 }
       );
     }

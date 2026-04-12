@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { ScheduleRecruit } from '@/types/schedule';
 import styles from './GuideModal.module.css';
 
@@ -22,12 +22,26 @@ function getParticipantUserIds(participants: string[]): string[] {
   return ids;
 }
 
+/** 参加者のLINEユーザーIDに加え、起案者（posterId）も含めた送信先（重複なし） */
+function buildRecipientUserIds(schedule: ScheduleRecruit): string[] {
+  const set = new Set<string>();
+  for (const id of getParticipantUserIds(schedule.participants ?? [])) {
+    set.add(id);
+  }
+  const poster = schedule.posterId?.trim();
+  if (poster) set.add(poster);
+  return [...set];
+}
+
 export function GuideModal({ schedule, onClose, onSent }: Props) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const participantUserIds = getParticipantUserIds(schedule.participants ?? []);
+  const recipientUserIds = useMemo(
+    () => buildRecipientUserIds(schedule),
+    [schedule.posterId, schedule.participants]
+  );
 
   const handleSend = useCallback(async () => {
     const trimmed = message.trim();
@@ -36,8 +50,8 @@ export function GuideModal({ schedule, onClose, onSent }: Props) {
       return;
     }
 
-    if (participantUserIds.length === 0) {
-      setError('LINEに送信できる参加者がいません。参加者にユーザーIDが紐づいていない可能性があります。');
+    if (recipientUserIds.length === 0) {
+      setError('LINEに送信できる宛先がありません。起案者・参加者のユーザーIDが取得できない可能性があります。');
       return;
     }
 
@@ -48,7 +62,7 @@ export function GuideModal({ schedule, onClose, onSent }: Props) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          participantUserIds,
+          participantUserIds: recipientUserIds,
           message: trimmed,
         }),
       });
@@ -71,7 +85,7 @@ export function GuideModal({ schedule, onClose, onSent }: Props) {
     } finally {
       setIsSending(false);
     }
-  }, [message, participantUserIds, onClose, onSent]);
+  }, [message, recipientUserIds, onClose, onSent]);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -80,7 +94,7 @@ export function GuideModal({ schedule, onClose, onSent }: Props) {
         <div className={styles.scheduleInfo}>
           <p><strong>日付:</strong> {schedule.dateStr} {schedule.startTime || ''}</p>
           <p><strong>コース:</strong> {schedule.golfCourseName}</p>
-          <p><strong>送信先:</strong> 参加者 {participantUserIds.length}名</p>
+          <p><strong>送信先:</strong> 合計 {recipientUserIds.length}名（起案者を含む・LINE宛先）</p>
         </div>
         <div className={styles.field}>
           <label htmlFor="guide-message" className={styles.label}>

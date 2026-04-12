@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { MahjongScheduleRecruit } from '@/types/mahjong-schedule';
 import styles from './GuideModal.module.css';
 
@@ -19,11 +19,24 @@ function getParticipantUserIds(participants: string[]): string[] {
   return ids;
 }
 
+function buildRecipientUserIds(schedule: MahjongScheduleRecruit): string[] {
+  const set = new Set<string>();
+  for (const id of getParticipantUserIds(schedule.participants ?? [])) {
+    set.add(id);
+  }
+  const poster = schedule.posterId?.trim();
+  if (poster) set.add(poster);
+  return [...set];
+}
+
 export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const participantUserIds = getParticipantUserIds(schedule.participants ?? []);
+  const recipientUserIds = useMemo(
+    () => buildRecipientUserIds(schedule),
+    [schedule.posterId, schedule.participants]
+  );
 
   const handleSend = useCallback(async () => {
     const trimmed = message.trim();
@@ -31,8 +44,8 @@ export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
       setError('案内文を入力してください');
       return;
     }
-    if (participantUserIds.length === 0) {
-      setError('LINEに送信できる参加者がいません。');
+    if (recipientUserIds.length === 0) {
+      setError('LINEに送信できる宛先がありません。起案者・参加者のユーザーIDが取得できない可能性があります。');
       return;
     }
     setIsSending(true);
@@ -41,7 +54,7 @@ export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
       const res = await fetch('/api/notify/guide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantUserIds, message: trimmed }),
+        body: JSON.stringify({ participantUserIds: recipientUserIds, message: trimmed }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -60,7 +73,7 @@ export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
     } finally {
       setIsSending(false);
     }
-  }, [message, participantUserIds, onClose, onSent]);
+  }, [message, recipientUserIds, onClose, onSent]);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -69,7 +82,7 @@ export function MahjongGuideModal({ schedule, onClose, onSent }: Props) {
         <div className={styles.scheduleInfo}>
           <p><strong>日付:</strong> {schedule.dateStr} {schedule.playTimeSlot || ''}{schedule.expectedPlayTime ? ` / ${schedule.expectedPlayTime}` : ''}</p>
           <p><strong>場所:</strong> {schedule.venueName}</p>
-          <p><strong>送信先:</strong> 参加者 {participantUserIds.length}名</p>
+          <p><strong>送信先:</strong> 合計 {recipientUserIds.length}名（起案者を含む・LINE宛先）</p>
         </div>
         <div className={styles.field}>
           <label htmlFor="mahjong-guide-message" className={styles.label}>案内文</label>
