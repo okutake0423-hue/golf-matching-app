@@ -37,11 +37,21 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
       if (!url || !key) throw new Error('アップロードURLの取得結果が不正です');
 
       // 2) S3へアップロード（PUT）
-      const putRes = await fetch(url, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'image/jpeg' },
-        body: file,
-      });
+      let putRes: Response;
+      try {
+        putRes = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+      } catch (putErr) {
+        // iOS Safari などで CORS/ネットワークエラー時に "Load failed" になりやすい
+        const raw =
+          putErr instanceof Error ? putErr.message : String(putErr);
+        const hint =
+          'S3のCORS設定（AllowedOrigin/AllowedMethod=PUT）と、AWS_REGIONがバケットのリージョンと一致しているか確認してください。';
+        throw new Error(`${raw}\n\n${hint}`);
+      }
       if (!putRes.ok) {
         throw new Error(`画像アップロードに失敗しました (${putRes.status})`);
       }
