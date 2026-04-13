@@ -10,6 +10,25 @@ type Props = {
 
 type Stage = 'idle' | 'uploading' | 'analyzing' | 'done' | 'error';
 
+/** /api/matsushita-kai/analyze のエラーJSONを画面用テキストにする */
+function formatAnalyzeApiError(data: Record<string, unknown>): string {
+  const lines: string[] = [];
+  if (data.message) lines.push(String(data.message));
+  if (data.service) lines.push(`サービス: ${String(data.service)}`);
+  if (data.operation) lines.push(`操作: ${String(data.operation)}`);
+  if (data.region) lines.push(`リージョン: ${String(data.region)}`);
+  if (data.modelId) lines.push(`モデルID: ${String(data.modelId)}`);
+  const err = data.error as Record<string, unknown> | undefined;
+  if (err && typeof err === 'object') {
+    if (err.name) lines.push(`エラー名: ${String(err.name)}`);
+    if (err.message) lines.push(`AWS詳細: ${String(err.message)}`);
+    if (err.httpStatusCode != null) lines.push(`HTTP: ${String(err.httpStatusCode)}`);
+    if (err.requestId) lines.push(`RequestId: ${String(err.requestId)}`);
+  }
+  if (data.hint) lines.push(String(data.hint));
+  return lines.join('\n') || '解析に失敗しました';
+}
+
 export function MatsushitaKaiImageImport({ onImported }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<Stage>('idle');
@@ -80,9 +99,13 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ s3Key: key }),
       });
-      const analyzeData = await analyzeRes.json().catch(() => ({}));
+      const analyzeData = (await analyzeRes.json().catch(() => ({}))) as Record<
+        string,
+        unknown
+      >;
       if (!analyzeRes.ok) {
-        throw new Error(analyzeData.message || '解析に失敗しました');
+        console.error('[MatsushitaKaiImageImport] analyze API:', analyzeData);
+        throw new Error(formatAnalyzeApiError(analyzeData));
       }
 
       const imported: MatsushitaKaiRecordFormData = {
