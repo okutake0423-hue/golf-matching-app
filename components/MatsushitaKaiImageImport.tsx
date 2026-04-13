@@ -85,7 +85,6 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           disabled={stage === 'uploading' || stage === 'analyzing'}
         />
