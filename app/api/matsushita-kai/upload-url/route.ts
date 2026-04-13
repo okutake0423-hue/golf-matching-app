@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-function requiredEnv(name: string): string {
-  const v = process.env[name];
-  if (!v || !String(v).trim()) throw new Error(`${name} is not set`);
-  return String(v).trim();
+function requiredEnv(...names: string[]): string {
+  for (const name of names) {
+    const v = process.env[name];
+    if (v && String(v).trim()) return String(v).trim();
+  }
+  throw new Error(`${names[0]} is not set`);
 }
 
 export async function POST(request: NextRequest) {
@@ -20,7 +22,8 @@ export async function POST(request: NextRequest) {
     }
 
     const region = requiredEnv('AWS_REGION');
-    const bucket = requiredEnv('MATSUSHITA_KAI_S3_BUCKET');
+    // 旧表記の取り込み（MATSUSITA...）にも対応
+    const bucket = requiredEnv('MATSUSHITA_KAI_S3_BUCKET', 'MATSUSITA_KAI_S3_BUCKET');
 
     // 1枚限定（縦写真）。拡張子はcontent-typeから推定
     const ext = ct === 'image/png' ? 'png' : ct === 'image/webp' ? 'webp' : 'jpg';

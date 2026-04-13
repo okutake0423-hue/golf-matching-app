@@ -12,10 +12,12 @@ type Participant = {
   rank: number | null;
 };
 
-function requiredEnv(name: string): string {
-  const v = process.env[name];
-  if (!v || !String(v).trim()) throw new Error(`${name} is not set`);
-  return String(v).trim();
+function requiredEnv(...names: string[]): string {
+  for (const name of names) {
+    const v = process.env[name];
+    if (v && String(v).trim()) return String(v).trim();
+  }
+  throw new Error(`${names[0]} is not set`);
 }
 
 function toNumberOrNull(v: unknown): number | null {
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
     const bucket =
       typeof s3Bucket === 'string' && s3Bucket.trim()
         ? s3Bucket.trim()
-        : requiredEnv('MATSUSHITA_KAI_S3_BUCKET');
+        : requiredEnv('MATSUSHITA_KAI_S3_BUCKET', 'MATSUSITA_KAI_S3_BUCKET');
     const key = typeof s3Key === 'string' ? s3Key.trim() : '';
     if (!key) {
       return NextResponse.json({ message: 's3Key が必要です' }, { status: 400 });
