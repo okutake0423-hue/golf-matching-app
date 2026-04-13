@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-function requiredEnv(...names: string[]): string {
+function getEnv(...names: string[]): string | null {
   for (const name of names) {
     const v = process.env[name];
     if (v && String(v).trim()) return String(v).trim();
   }
-  throw new Error(`${names[0]} is not set`);
+  return null;
+}
+
+function envPresence(names: string[]): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const n of names) out[n] = !!(process.env[n] && String(process.env[n]).trim());
+  return out;
 }
 
 export async function POST(request: NextRequest) {
@@ -21,9 +27,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const region = requiredEnv('AWS_REGION');
-    // 旧表記の取り込み（MATSUSITA...）にも対応
-    const bucket = requiredEnv('MATSUSHITA_KAI_S3_BUCKET', 'MATSUSITA_KAI_S3_BUCKET');
+    const region = getEnv('AWS_REGION');
+    if (!region) {
+      return NextResponse.json(
+        {
+          message: 'AWS_REGION is not set',
+          missingVariables: ['AWS_REGION'],
+          envPresent: envPresence(['AWS_REGION']),
+          hint: '.env.local を変更した場合は dev サーバー再起動、Vercel は Redeploy が必要です。',
+        },
+        { status: 500 }
+      );
+    }
+    // 旧表記（MATSUSITA...）や、全角アンダースコア（＿）にも対応
+    const bucketNames = [
+      'MATSUSHITA_KAI_S3_BUCKET',
+      'MATSUSITA_KAI_S3_BUCKET',
+      'MATSUSHITA_KAI_S3＿BUCKET',
+      'MATSUSITA_KAI_S3＿BUCKET'
+    ];
+    const bucket = getEnv(...bucketNames);
+    if (!bucket) {
+      return NextResponse.json(
+        {
+          message: 'MATSUSHITA_KAI_S3_BUCKET is not set',
+          missingVariables: ['MATSUSHITA_KAI_S3_BUCKET'],
+          checked: bucketNames,
+          envPresent: envPresence(bucketNames),
+          hint: '環境変数名の全角/半角やスペルを確認し、devサーバー再起動 / Vercel Redeploy をしてください。',
+        },
+        { status: 500 }
+      );
+    }
 
     // 1枚限定（縦写真）。拡張子はcontent-typeから推定
     const ext = ct === 'image/png' ? 'png' : ct === 'image/webp' ? 'webp' : 'jpg';

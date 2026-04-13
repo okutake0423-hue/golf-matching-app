@@ -12,12 +12,18 @@ type Participant = {
   rank: number | null;
 };
 
-function requiredEnv(...names: string[]): string {
+function getEnv(...names: string[]): string | null {
   for (const name of names) {
     const v = process.env[name];
     if (v && String(v).trim()) return String(v).trim();
   }
-  throw new Error(`${names[0]} is not set`);
+  return null;
+}
+
+function envPresence(names: string[]): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const n of names) out[n] = !!(process.env[n] && String(process.env[n]).trim());
+  return out;
 }
 
 function toNumberOrNull(v: unknown): number | null {
@@ -62,16 +68,42 @@ function getTextLinesFromTextract(blocks: any[]): string[] {
 export async function POST(request: NextRequest) {
   try {
     const { s3Bucket, s3Key } = await request.json().catch(() => ({}));
+    const bucketNames = [
+      'MATSUSHITA_KAI_S3_BUCKET'
+    ];
     const bucket =
       typeof s3Bucket === 'string' && s3Bucket.trim()
         ? s3Bucket.trim()
-        : requiredEnv('MATSUSHITA_KAI_S3_BUCKET', 'MATSUSITA_KAI_S3_BUCKET');
+        : getEnv(...bucketNames);
     const key = typeof s3Key === 'string' ? s3Key.trim() : '';
     if (!key) {
       return NextResponse.json({ message: 's3Key が必要です' }, { status: 400 });
     }
+    if (!bucket) {
+      return NextResponse.json(
+        {
+          message: 'MATSUSHITA_KAI_S3_BUCKET is not set',
+          missingVariables: ['MATSUSHITA_KAI_S3_BUCKET'],
+          checked: bucketNames,
+          envPresent: envPresence(bucketNames),
+          hint: '.env.local を変更した場合は dev サーバー再起動、Vercel は Redeploy が必要です。',
+        },
+        { status: 500 }
+      );
+    }
 
-    const region = requiredEnv('AWS_REGION');
+    const region = getEnv('AWS_REGION');
+    if (!region) {
+      return NextResponse.json(
+        {
+          message: 'AWS_REGION is not set',
+          missingVariables: ['AWS_REGION'],
+          envPresent: envPresence(['AWS_REGION']),
+          hint: '.env.local を変更した場合は dev サーバー再起動、Vercel は Redeploy が必要です。',
+        },
+        { status: 500 }
+      );
+    }
     const textract = new TextractClient({ region });
     const texRes = await textract.send(
       new AnalyzeDocumentCommand({
@@ -84,7 +116,17 @@ export async function POST(request: NextRequest) {
     const textLines = getTextLinesFromTextract(blocks);
     const rawText = textLines.join('\n');
 
-    const modelId = requiredEnv('BEDROCK_MODEL_ID');
+    const modelId = getEnv('BEDROCK_MODEL_ID');
+    if (!modelId) {
+      return NextResponse.json(
+        {
+          message: 'BEDROCK_MODEL_ID is not set',
+          missingVariables: ['BEDROCK_MODEL_ID'],
+          envPresent: envPresence(['BEDROCK_MODEL_ID']),
+        },
+        { status: 500 }
+      );
+    }
     const bedrock = new BedrockRuntimeClient({ region });
 
     const systemPrompt =
