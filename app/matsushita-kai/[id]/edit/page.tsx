@@ -8,6 +8,7 @@ import {
   getMatsushitaKaiRecordById,
   updateMatsushitaKaiRecord,
 } from '@/lib/firestore-matsushita';
+import { MatsushitaKaiImageImport } from '@/components/MatsushitaKaiImageImport';
 import { MatsushitaKaiRecordForm } from '@/components/MatsushitaKaiRecordForm';
 import type { MatsushitaKaiRecordFormData } from '@/types/matsushita-kai';
 import styles from '../../matsushita-kai.module.css';
@@ -22,6 +23,7 @@ export default function MatsushitaKaiEditPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -83,6 +85,12 @@ export default function MatsushitaKaiEditPage() {
     [id, router]
   );
 
+  const handleImported = useCallback((data: MatsushitaKaiRecordFormData) => {
+    // 解析結果で現在の編集内容を置き換える（必要ならユーザーが修正して更新）
+    setInitialData(data);
+    setFormKey((k) => k + 1);
+  }, []);
+
   if (!ready) {
     return (
       <div className={styles.container}>
@@ -122,8 +130,9 @@ export default function MatsushitaKaiEditPage() {
             {saveError}
           </div>
         )}
+        <MatsushitaKaiImageImport onImported={handleImported} />
         <MatsushitaKaiRecordForm
-          key={id}
+          key={`${id}-${formKey}`}
           mode="edit"
           initialData={initialData}
           onSubmit={handleSubmit}

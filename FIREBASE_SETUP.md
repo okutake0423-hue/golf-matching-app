@@ -63,3 +63,38 @@ FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE K
 - Firebase Admin SDKの秘密鍵は**絶対に**クライアントサイドに公開しないでください
 - 環境変数やJSONファイルは`.gitignore`に追加されていることを確認してください
 - 本番環境では、環境変数を使用することを強く推奨します
+
+---
+
+## （追加）松下会記録：画像アップロード（AWS Textract + Bedrock）
+
+松下会のスコア表（スマホ縦写真・固定フォーマット・1枚）をアップロードしてAI判定し、フォームに反映する機能があります。
+
+### 必要な環境変数（`.env.local` / Vercel）
+
+```env
+# AWS
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=xxxxxxxx
+AWS_SECRET_ACCESS_KEY=xxxxxxxx
+
+# S3（アップロード先バケット名）
+MATSUSHITA_KAI_S3_BUCKET=your-bucket-name
+
+# Bedrock（Converse対応モデルID）
+BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0
+```
+
+### AWS側の前提
+
+- **S3バケット**は非公開（公開アクセスOFF）
+- 画像は **Presigned URL** でアップロード（有効期限5分）
+- IAM権限（例）
+  - S3: `PutObject`（対象prefixのみ推奨）
+  - Textract: `AnalyzeDocument`
+  - Bedrock: `bedrock:InvokeModel` / `bedrock:Converse`
+
+### API（Next.js）
+
+- `POST /api/matsushita-kai/upload-url` … Presigned URLを返す
+- `POST /api/matsushita-kai/analyze` … Textract→Bedrockで解析して `MatsushitaKaiRecordFormData` 相当のJSONを返す

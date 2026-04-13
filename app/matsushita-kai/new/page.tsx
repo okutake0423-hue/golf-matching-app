@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
 import { addMatsushitaKaiRecord } from '@/lib/firestore-matsushita';
+import { MatsushitaKaiImageImport } from '@/components/MatsushitaKaiImageImport';
 import { MatsushitaKaiRecordForm } from '@/components/MatsushitaKaiRecordForm';
 import type { MatsushitaKaiRecordFormData } from '@/types/matsushita-kai';
 import styles from '../matsushita-kai.module.css';
@@ -15,6 +16,8 @@ export default function MatsushitaKaiNewPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [imported, setImported] = useState<MatsushitaKaiRecordFormData | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -54,6 +57,11 @@ export default function MatsushitaKaiNewPage() {
     [userId, router]
   );
 
+  const handleImported = useCallback((data: MatsushitaKaiRecordFormData) => {
+    setImported(data);
+    setFormKey((k) => k + 1); // initialDataはマウント時のみ反映のため、再マウントして反映
+  }, []);
+
   if (!ready) {
     return (
       <div className={styles.container}>
@@ -70,7 +78,14 @@ export default function MatsushitaKaiNewPage() {
             {saveError}
           </div>
         )}
-        <MatsushitaKaiRecordForm mode="create" onSubmit={handleSubmit} submitting={submitting} />
+        <MatsushitaKaiImageImport onImported={handleImported} />
+        <MatsushitaKaiRecordForm
+          key={formKey}
+          mode="create"
+          initialData={imported ?? undefined}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+        />
         <div className={styles.nav}>
           <Link href="/matsushita-kai" className={styles.backLink}>
             ← 一覧に戻る
