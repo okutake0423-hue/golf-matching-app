@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import type { MatsushitaKaiRecordFormData } from '@/types/matsushita-kai';
+import type {
+  MatsushitaKaiParticipantRow,
+  MatsushitaKaiRecordFormData,
+} from '@/types/matsushita-kai';
 import styles from './MatsushitaKaiImageImport.module.css';
 
 type Props = {
@@ -108,11 +111,16 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
         throw new Error(formatAnalyzeApiError(analyzeData));
       }
 
+      const strField = (v: unknown): string => (typeof v === 'string' ? v : '');
+      const participantsRaw = Array.isArray(analyzeData.participants)
+        ? analyzeData.participants
+        : [];
       const imported: MatsushitaKaiRecordFormData = {
-        competitionName: analyzeData.competitionName ?? '松下会',
-        golfCourseName: analyzeData.golfCourseName ?? '',
-        dateStr: analyzeData.dateStr ?? '',
-        participants: Array.isArray(analyzeData.participants) ? analyzeData.participants : [],
+        competitionName:
+          strField(analyzeData.competitionName).trim() || '松下会',
+        golfCourseName: strField(analyzeData.golfCourseName),
+        dateStr: strField(analyzeData.dateStr),
+        participants: participantsRaw as MatsushitaKaiParticipantRow[],
       };
 
       onImported(imported);
