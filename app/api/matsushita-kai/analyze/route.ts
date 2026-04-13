@@ -69,10 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     const { s3Bucket, s3Key } = await request.json().catch(() => ({}));
     const bucketNames = [
-      'MATSUSHITA_KAI_S3_BUCKET',
-      'MATSUSITA_KAI_S3_BUCKET',
-      'MATSUSHITA_KAI_S3＿BUCKET',
-      'MATSUSITA_KAI_S3＿BUCKET',
+      'MATSUSHITA_KAI_S3_BUCKET'
     ];
     const bucket =
       typeof s3Bucket === 'string' && s3Bucket.trim()
@@ -108,12 +105,34 @@ export async function POST(request: NextRequest) {
       );
     }
     const textract = new TextractClient({ region });
-    const texRes = await textract.send(
-      new AnalyzeDocumentCommand({
-        Document: { S3Object: { Bucket: bucket, Name: key } },
-        FeatureTypes: ['TABLES', 'FORMS'],
-      })
-    );
+    let texRes: any;
+    try {
+      texRes = await textract.send(
+        new AnalyzeDocumentCommand({
+          Document: { S3Object: { Bucket: bucket, Name: key } },
+          FeatureTypes: ['TABLES', 'FORMS'],
+        })
+      );
+    } catch (texErr: any) {
+      const meta = texErr?.$metadata;
+      return NextResponse.json(
+        {
+          message: 'Textract の呼び出しに失敗しました',
+          service: 'textract',
+          operation: 'AnalyzeDocument',
+          region,
+          error: {
+            name: texErr?.name,
+            message: texErr?.message ?? String(texErr),
+            httpStatusCode: meta?.httpStatusCode,
+            requestId: meta?.requestId,
+          },
+          hint:
+            'IAM権限（textract:AnalyzeDocument）と、S3バケット/オブジェクトの参照権限、リージョン一致を確認してください。',
+        },
+        { status: 500 }
+      );
+    }
 
     const blocks = texRes.Blocks ?? [];
     const textLines = getTextLinesFromTextract(blocks);
@@ -162,18 +181,47 @@ export async function POST(request: NextRequest) {
       '--- OCR TEXT END ---',
     ].join('\n');
 
-    const brRes = await bedrock.send(
-      new ConverseCommand({
-        modelId,
-        system: [{ text: systemPrompt }],
-        messages: [{ role: 'user', content: [{ text: userPrompt }] }],
-        inferenceConfig: { temperature: 0 },
-      })
-    );
+    let brRes: any;
+    try {
+      brRes = await bedrock.send(
+        new ConverseCommand({
+          modelId,
+          system: [{ text: systemPrompt }],
+          messages: [{ role: 'user', content: [{ text: userPrompt }] }],
+          inferenceConfig: { temperature: 0 },
+        })
+      );
+    } catch (brErr: any) {
+      const meta = brErr?.$metadata;
+      const msg = brErr?.message ?? String(brErr);
+      const isSubscription =
+        typeof msg === 'string' &&
+        msg.toLowerCase().includes('subscription');
+      return NextResponse.json(
+        {
+          message: 'Bedrock の呼び出しに失敗しました',
+          service: 'bedrock',
+          operation: 'Converse',
+          region: bedrockRegion,
+          modelId,
+          error: {
+            name: brErr?.name,
+            message: msg,
+            httpStatusCode: meta?.httpStatusCode,
+            requestId: meta?.requestId,
+          },
+          hint: isSubscription
+            ? 'BedrockのModel access（利用許可/サブスクリプション）を有効化してください。Bedrockコンソール→Model accessで対象モデルをEnable/Request access。'
+            : 'IAM権限（bedrock:Converse または bedrock:InvokeModel）と、Bedrock対応リージョン、modelIdの一致を確認してください。',
+        },
+        { status: 500 }
+      );
+    }
 
+    const contentParts = brRes.output?.message?.content as any[] | undefined;
     const outText =
-      brRes.output?.message?.content
-        ?.map((c) => ('text' in c ? c.text : ''))
+      contentParts
+        ?.map((c: any) => (c && typeof c === 'object' && 'text' in c ? c.text : ''))
         .join('') ?? '';
 
     // 余計な前後文が混ざっても拾えるように、最初の { 〜 最後の } を抜く
