@@ -22,12 +22,23 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
     setError(null);
     setStage('uploading');
     try {
+      const origin =
+        typeof window !== 'undefined' ? window.location.origin : '';
       // 1) presigned url 取得
-      const presignRes = await fetch('/api/matsushita-kai/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: file.type || 'image/jpeg' }),
-      });
+      let presignRes: Response;
+      try {
+        presignRes = await fetch('/api/matsushita-kai/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentType: file.type || 'image/jpeg' }),
+        });
+      } catch (presignErr) {
+        const raw =
+          presignErr instanceof Error ? presignErr.message : String(presignErr);
+        throw new Error(
+          `アップロードURLの取得に失敗しました: ${raw}\n\n現在のOrigin: ${origin}`
+        );
+      }
       const presignData = await presignRes.json().catch(() => ({}));
       if (!presignRes.ok) {
         throw new Error(presignData.message || 'アップロードURLの取得に失敗しました');
@@ -51,11 +62,15 @@ export function MatsushitaKaiImageImport({ onImported }: Props) {
         const raw =
           putErr instanceof Error ? putErr.message : String(putErr);
         const hint =
-          'S3のCORS設定（AllowedOrigin/AllowedMethod=POST）と、AWS_REGIONがバケットのリージョンと一致しているか確認してください。';
+          `S3のCORS設定（AllowedOrigin/AllowedMethod=POST）と、AWS_REGIONがバケットのリージョンと一致しているか確認してください。\n\n現在のOrigin: ${origin}`;
         throw new Error(`${raw}\n\n${hint}`);
       }
       if (!putRes.ok) {
-        throw new Error(`画像アップロードに失敗しました (${putRes.status})`);
+        // CORSが通っている場合はS3のXMLエラーが取れることがある
+        const bodyText = await putRes.text().catch(() => '');
+        throw new Error(
+          `画像アップロードに失敗しました (${putRes.status})\n${bodyText ? `\n${bodyText}` : ''}`
+        );
       }
 
       // 3) 解析（Textract→Bedrock）
