@@ -83,6 +83,11 @@ MATSUSHITA_KAI_S3_BUCKET=your-bucket-name
 
 # Bedrock（Converse対応モデルID）
 BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0
+
+# （任意）リージョンを分けたい場合（S3/Textract/Bedrock）
+AWS_S3_REGION=ap-northeast-1
+AWS_TEXTRACT_REGION=ap-northeast-1
+AWS_BEDROCK_REGION=ap-northeast-1
 ```
 
 ### AWS側の前提

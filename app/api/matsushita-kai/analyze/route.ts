@@ -69,7 +69,10 @@ export async function POST(request: NextRequest) {
   try {
     const { s3Bucket, s3Key } = await request.json().catch(() => ({}));
     const bucketNames = [
-      'MATSUSHITA_KAI_S3_BUCKET'
+      'MATSUSHITA_KAI_S3_BUCKET',
+      'MATSUSITA_KAI_S3_BUCKET',
+      'MATSUSHITA_KAI_S3＿BUCKET',
+      'MATSUSITA_KAI_S3＿BUCKET',
     ];
     const bucket =
       typeof s3Bucket === 'string' && s3Bucket.trim()
@@ -92,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const region = getEnv('AWS_REGION');
+    const region = getEnv('AWS_TEXTRACT_REGION', 'AWS_REGION');
     if (!region) {
       return NextResponse.json(
         {
@@ -127,7 +130,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    const bedrock = new BedrockRuntimeClient({ region });
+    const bedrockRegion = getEnv('AWS_BEDROCK_REGION', 'AWS_REGION') ?? region;
+    const bedrock = new BedrockRuntimeClient({ region: bedrockRegion });
 
     const systemPrompt =
       'あなたはゴルフコンペのスコア表（松下会）のOCR結果から、指定のJSON形式に整形するアシスタントです。' +

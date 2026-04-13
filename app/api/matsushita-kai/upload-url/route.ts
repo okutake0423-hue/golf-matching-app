@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 
 function getEnv(...names: string[]): string | null {
   for (const name of names) {
@@ -27,13 +27,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const region = getEnv('AWS_REGION');
+    const region = getEnv('AWS_S3_REGION', 'AWS_REGION');
     if (!region) {
       return NextResponse.json(
         {
           message: 'AWS_REGION is not set',
           missingVariables: ['AWS_REGION'],
-          envPresent: envPresence(['AWS_REGION']),
+          envPresent: envPresence(['AWS_S3_REGION', 'AWS_REGION']),
           hint: '.env.local を変更した場合は dev サーバー再起動、Vercel は Redeploy が必要です。',
         },
         { status: 500 }
@@ -67,14 +67,25 @@ export async function POST(request: NextRequest) {
       .slice(2)}.${ext}`;
 
     const s3 = new S3Client({ region });
-    const cmd = new PutObjectCommand({
+    const presigned = await createPresignedPost(s3, {
       Bucket: bucket,
       Key: key,
-      ContentType: ct,
+      Expires: 60 * 5,
+      Conditions: [
+        ['content-length-range', 1, 10 * 1024 * 1024], // 10MB
+        ['starts-with', '$Content-Type', 'image/'],
+      ],
+      Fields: {
+        'Content-Type': ct,
+      },
     });
-    const url = await getSignedUrl(s3, cmd, { expiresIn: 60 * 5 });
 
-    return NextResponse.json({ url, key, expiresInSec: 300 });
+    return NextResponse.json({
+      url: presigned.url,
+      fields: presigned.fields,
+      key,
+      expiresInSec: 300,
+    });
   } catch (e) {
     console.error('[matsushita-kai/upload-url]', e);
     const msg = e instanceof Error ? e.message : 'failed';
