@@ -23,7 +23,8 @@ const nextConfig = {
               "script-src-attr 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://static.line-scdn.net https://*.line-scdn.net",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com https://liff.line.me https://api.line.me https://*.line.me https://*.line-apps.com https://*.line-scdn.net wss://*.firebaseio.com",
+              // S3への直接アップロード（松下会の画像入力）を許可
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com https://liff.line.me https://api.line.me https://*.line.me https://*.line-apps.com https://*.line-scdn.net wss://*.firebaseio.com https://*.amazonaws.com",
               "frame-src 'self' https://*.line.me",
               "worker-src 'self' blob:",
             ].join('; '),
