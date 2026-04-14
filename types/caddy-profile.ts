@@ -1,0 +1,22 @@
+import type { TimestampLike } from '@/types/schedule';
+
+/** Firestore `caddy_profiles` ドキュメント */
+export interface CaddyProfileDoc {
+  id?: string;
+  posterId: string;
+  golfCourseName: string;
+  caddyName: string;
+  /** キャディー番号（表記ゆれ対応のため文字列） */
+  caddyNumber: string;
+  age: number | null;
+  /** S3オブジェクトキー（プレフィックス caddy-profiles/） */
+  photoS3Key: string;
+  createdAt: TimestampLike;
+}
+
+export interface CaddyProfileFormData {
+  golfCourseName: string;
+  caddyName: string;
+  caddyNumber: string;
+  age: number | null;
+}

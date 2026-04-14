@@ -9,12 +9,13 @@ type Props = {
   onEdit?: () => void;
   onProfileRegistrants?: () => void;
   onMatsushitaKai?: () => void;
+  onCaddyProfiles?: () => void;
   onLogout?: () => void;
   onSchedules?: () => void;
   onMahjongSchedules?: () => void;
 };
 
-export function ProfileDisplay({ profile, onEdit, onProfileRegistrants, onMatsushitaKai, onLogout, onSchedules, onMahjongSchedules }: Props) {
+export function ProfileDisplay({ profile, onEdit, onProfileRegistrants, onMatsushitaKai, onCaddyProfiles, onLogout, onSchedules, onMahjongSchedules }: Props) {
   const playStyleLabel =
     (PLAY_STYLE_OPTIONS.find((o) => o.value === profile.playStyle)?.label ??
       profile.playStyle) ||
@@ -124,6 +125,11 @@ export function ProfileDisplay({ profile, onEdit, onProfileRegistrants, onMatsus
         {onMatsushitaKai && (
           <button type="button" onClick={onMatsushitaKai} className={styles.buttonEdit}>
             松下会記録
+          </button>
+        )}
+        {onCaddyProfiles && (
+          <button type="button" onClick={onCaddyProfiles} className={styles.buttonEdit}>
+            キャディープロフィール
           </button>
         )}
         {onEdit && (

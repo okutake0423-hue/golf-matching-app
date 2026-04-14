@@ -128,3 +128,85 @@ AWS_BEDROCK_REGION=ap-northeast-1
 
 - `POST /api/matsushita-kai/upload-url` … Presigned URLを返す
 - `POST /api/matsushita-kai/analyze` … Textract→Bedrockで解析して `MatsushitaKaiRecordFormData` 相当のJSONを返す
+
+---
+
+## （追加）キャディープロフィール：写真をS3、メタデータをFirestore
+
+ゴルフコース・キャディー名・番号・年齢・写真を登録し、一覧で確認できます。
+
+### 環境変数
+
+```env
+# キャディー写真専用のS3バケット（新規作成して名前を設定）
+CADDY_PROFILE_S3_BUCKET=your-caddy-profile-bucket
+# バケットのリージョン（松下会と別バケットでも可）
+AWS_S3_REGION=ap-northeast-1
+```
+
+### S3バケット
+
+- 非公開バケットで作成
+- CORSに `POST`（アップロード）を許可（アプリのOriginを `AllowedOrigins` に追加）
+- IAM: アプリ用キーに `s3:PutObject` / `s3:GetObject`（`caddy-profiles/*` などprefix制限推奨）
+
+### API
+
+- `POST /api/caddy-profiles/upload-url` … 写真アップロード用 Presigned POST
+- `GET /api/caddy-profiles/photo-url?key=...` … 一覧表示用の署名付き読み取りURL（キーは `caddy-profiles/` で始まるもののみ）
+
+### Firestore セキュリティルール（`caddy_profiles`）
+
+このアプリは **LINE（LIFF）のみ**で、ブラウザから Firestore に書くとき **Firebase Authentication の `request.auth` は通常つきません**（READMEの `users` / `schedules` と同じ前提）。
+
+そのため、**開発・テストと同様に「コレクション単位で許可」**するのが手早いです。
+
+#### 手順
+
+1. [Firebase Console](https://console.firebase.google.com/) → 対象プロジェクト → **Firestore Database** → **ルール** タブ
+2. 既存の `match` ブロックに、次の **`caddy_profiles` 用のブロックを追加**する  
+   （`users` / `schedules` と並べて書きます）
+3. **公開** をクリック（保存だけでは反映されません）
+
+#### 開発・テスト用（`users` / `schedules` と同じ考え方：誰でも読み書き）
+
+既存ルールが下記のような形なら、`caddy_profiles` の `match` を **1つ足します**。
+
+```text
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    match /schedules/{scheduleId} {
+      allow read, write: if true;
+    }
+    match /caddy_profiles/{profileId} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+`mahjong_schedules` や `matsushita_kai_records` など、プロジェクトで既に別コレクションを許可している場合は、**それらはそのまま残した上で** `match /caddy_profiles/{profileId}` だけ追加してください。
+
+#### 本番で締める場合の例（読み取りは全員・書き込みは認証ユーザーのみ）
+
+Firebase Auth を導入して `request.auth.uid` が取れるようになった後なら、例えば次のようにできます（**現状のLIFFのみ構成では `request.auth` が null のため、そのままでは書けません**）。
+
+```text
+match /caddy_profiles/{profileId} {
+  allow read: if request.auth != null;
+  allow create, update, delete: if request.auth != null
+    && request.resource.data.posterId == request.auth.uid;
+}
+```
+
+上記は **設計例**です。LINE の `userId` と Firebase Auth の `uid` を一致させる仕組みが別途必要です。
+
+---
+
+### Firestore インデックス
+
+一覧は `orderBy('createdAt', 'desc')` を使っています。初回アクセスでインデックス作成リンクが出たら、リンクから作成してください。

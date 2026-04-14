@@ -135,6 +135,10 @@ export default function Home() {
     router.push('/matsushita-kai');
   };
 
+  const handleCaddyProfiles = () => {
+    router.push('/caddy-profiles');
+  };
+
   if (isLoading) {
     return (
       <div className={styles.container}>
@@ -218,6 +222,7 @@ export default function Home() {
             onSchedules={handleSchedules}
             onMahjongSchedules={handleMahjongSchedules}
             onMatsushitaKai={handleMatsushitaKai}
+            onCaddyProfiles={handleCaddyProfiles}
           />
         ) : (
           <div className={styles.login}>

@@ -155,6 +155,9 @@ service cloud.firestore {
     match /schedules/{scheduleId} {
       allow read, write: if true;
     }
+    match /caddy_profiles/{profileId} {
+      allow read, write: if true;
+    }
   }
 }
 ```
@@ -626,11 +629,14 @@ service cloud.firestore {
     match /schedules/{scheduleId} {
       allow read, write: if true;
     }
+    match /caddy_profiles/{profileId} {
+      allow read, write: if true;
+    }
   }
 }
 ```
 
-これで `users` と `schedules` コレクションへの読み書きが許可され、プロフィールの表示・保存と予定の投稿・表示が動きます。
+これで `users`・`schedules`・`caddy_profiles` コレクションへの読み書きが許可され、プロフィール・予定・キャディープロフィールの表示・保存が動きます。
 
 **重要**: 
 - このルールは開発・テスト用です。本番環境では、Cloud Functions などサーバー側で Firestore を操作する構成に変更することを推奨します
