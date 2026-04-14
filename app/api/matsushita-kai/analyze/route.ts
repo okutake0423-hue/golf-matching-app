@@ -143,13 +143,26 @@ export async function POST(request: NextRequest) {
     const textLines = getTextLinesFromTextract(blocks);
     const rawText = textLines.join('\n');
 
-    const modelId = getEnv('BEDROCK_MODEL_ID');
+    // Claude 4 系などはオンデマンドの modelId ではなく「推論プロファイル」が必要な場合がある。
+    // Converse の modelId には推論プロファイルID（またはARN）を渡せる。
+    const modelId = getEnv(
+      'BEDROCK_INFERENCE_PROFILE_ID',
+      'BEDROCK_MODEL_ID'
+    );
     if (!modelId) {
       return NextResponse.json(
         {
-          message: 'BEDROCK_MODEL_ID is not set',
-          missingVariables: ['BEDROCK_MODEL_ID'],
-          envPresent: envPresence(['BEDROCK_MODEL_ID']),
+          message:
+            'BEDROCK_INFERENCE_PROFILE_ID または BEDROCK_MODEL_ID を設定してください',
+          missingVariables: [
+            'BEDROCK_INFERENCE_PROFILE_ID',
+            'BEDROCK_MODEL_ID',
+          ],
+          envPresent: envPresence([
+            'BEDROCK_INFERENCE_PROFILE_ID',
+            'BEDROCK_MODEL_ID',
+          ]),
+          hint: 'anthropic.claude-sonnet-4-6 等で「inference profile が必要」というエラーが出る場合は、Bedrockコンソールの Inference profiles でプロファイルIDを確認し、BEDROCK_INFERENCE_PROFILE_ID に設定してください。',
         },
         { status: 500 }
       );
@@ -199,9 +212,20 @@ export async function POST(request: NextRequest) {
     } catch (brErr: any) {
       const meta = brErr?.$metadata;
       const msg = brErr?.message ?? String(brErr);
-      const isSubscription =
-        typeof msg === 'string' &&
-        msg.toLowerCase().includes('subscription');
+      const msgLower = typeof msg === 'string' ? msg.toLowerCase() : '';
+      const isSubscription = msgLower.includes('subscription');
+      const needsInferenceProfile =
+        msgLower.includes('inference profile') ||
+        msgLower.includes('on-demand throughput');
+      let bedrockHint =
+        'IAM権限（bedrock:Converse または bedrock:InvokeModel）と、Bedrock対応リージョン、modelIdの一致を確認してください。';
+      if (isSubscription) {
+        bedrockHint =
+          'BedrockのModel access（利用許可/サブスクリプション）を有効化してください。Bedrockコンソール→Model accessで対象モデルをEnable/Request access。';
+      } else if (needsInferenceProfile) {
+        bedrockHint =
+          'このモデルはオンデマンドのモデルIDでは呼べません。AWSコンソール → Amazon Bedrock → Inference profiles で、利用するリージョンの「推論プロファイルID」（またはARN）をコピーし、環境変数 BEDROCK_INFERENCE_PROFILE_ID に設定してください（従来の BEDROCK_MODEL_ID は空にするか、推論プロファイルを優先します）。';
+      }
       return NextResponse.json(
         {
           message: 'Bedrock の呼び出しに失敗しました',
@@ -215,9 +239,7 @@ export async function POST(request: NextRequest) {
             httpStatusCode: meta?.httpStatusCode,
             requestId: meta?.requestId,
           },
-          hint: isSubscription
-            ? 'BedrockのModel access（利用許可/サブスクリプション）を有効化してください。Bedrockコンソール→Model accessで対象モデルをEnable/Request access。'
-            : 'IAM権限（bedrock:Converse または bedrock:InvokeModel）と、Bedrock対応リージョン、modelIdの一致を確認してください。',
+          hint: bedrockHint,
         },
         { status: 500 }
       );

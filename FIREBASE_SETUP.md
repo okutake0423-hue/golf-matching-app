@@ -84,11 +84,23 @@ MATSUSHITA_KAI_S3_BUCKET=your-bucket-name
 # Bedrock（Converse対応モデルID）
 BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0
 
+# （推奨）推論プロファイル経由で呼ぶ場合（Claude 4 系などで on-demand が使えないとき）
+# Bedrockコンソール → Inference profiles で ID または ARN をコピー
+# BEDROCK_INFERENCE_PROFILE_ID=xxxxxxxx
+
 # （任意）リージョンを分けたい場合（S3/Textract/Bedrock）
 AWS_S3_REGION=ap-northeast-1
 AWS_TEXTRACT_REGION=ap-northeast-1
 AWS_BEDROCK_REGION=ap-northeast-1
 ```
+
+#### Bedrock で「inference profile が必要」というエラーが出る場合
+
+`Invocation of model ID ... with on-demand throughput isn't supported` のように出る場合、**モデルIDそのものではなく推論プロファイル**で呼ぶ必要があります。
+
+1. AWSコンソール → **Amazon Bedrock** → **Inference profiles**
+2. リージョン（例: `ap-southeast-1`）で利用可能なプロファイルの **ID または ARN** をコピー
+3. 環境変数 **`BEDROCK_INFERENCE_PROFILE_ID`** に設定（この値があれば `BEDROCK_MODEL_ID` より優先されます）
 
 ### AWS側の前提
 
