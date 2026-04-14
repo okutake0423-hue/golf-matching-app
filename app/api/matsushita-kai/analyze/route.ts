@@ -211,15 +211,25 @@ export async function POST(request: NextRequest) {
       );
     } catch (brErr: any) {
       const meta = brErr?.$metadata;
+      const httpStatus = meta?.httpStatusCode;
       const msg = brErr?.message ?? String(brErr);
       const msgLower = typeof msg === 'string' ? msg.toLowerCase() : '';
+      const errName = brErr?.name ?? '';
       const isSubscription = msgLower.includes('subscription');
       const needsInferenceProfile =
         msgLower.includes('inference profile') ||
         msgLower.includes('on-demand throughput');
+      const isTokenQuota =
+        errName === 'ThrottlingException' ||
+        httpStatus === 429 ||
+        msgLower.includes('tokens per day') ||
+        msgLower.includes('too many tokens');
       let bedrockHint =
         'IAM権限（bedrock:Converse または bedrock:InvokeModel）と、Bedrock対応リージョン、modelIdの一致を確認してください。';
-      if (isSubscription) {
+      if (isTokenQuota) {
+        bedrockHint =
+          'Bedrockの日次トークン上限（またはレート制限）に達しています。しばらく待ってから再試行するか、AWS Service Quotas で対象モデル/リージョンのクォータ引き上げを申請してください。開発中はより軽いモデルや推論プロファイルの切り替えも検討できます。';
+      } else if (isSubscription) {
         bedrockHint =
           'BedrockのModel access（利用許可/サブスクリプション）を有効化してください。Bedrockコンソール→Model accessで対象モデルをEnable/Request access。';
       } else if (needsInferenceProfile) {
