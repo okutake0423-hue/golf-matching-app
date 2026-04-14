@@ -4,6 +4,8 @@ import type { TimestampLike } from '@/types/schedule';
 export interface CaddyProfileDoc {
   id?: string;
   posterId: string;
+  /** 投稿者表示名（LIFF profile.displayName）。未保存の既存データでは空の可能性あり */
+  posterDisplayName?: string;
   golfCourseName: string;
   caddyName: string;
   /** キャディー番号（表記ゆれ対応のため文字列） */
