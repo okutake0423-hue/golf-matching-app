@@ -115,6 +115,12 @@ export async function POST(request: NextRequest) {
       );
     } catch (texErr: any) {
       const meta = texErr?.$metadata;
+      const errName = texErr?.name ?? '';
+      const subscriptionHint =
+        errName === 'SubscriptionRequiredException' ||
+        String(texErr?.message ?? '').includes('subscription')
+          ? 'このリージョンでは Amazon Textract が未提供、またはアカウントで利用開始されていない可能性が高いです。Textract対応リージョン（例: ap-southeast-1, ap-southeast-2, ap-northeast-1）に **S3バケットと AWS_S3_REGION / AWS_TEXTRACT_REGION を揃えて** ください（AnalyzeDocument の S3 参照は原則同一リージョンです）。'
+          : 'IAM権限（textract:AnalyzeDocument）と、S3バケット/オブジェクトの参照権限、TextractとS3のリージョン一致を確認してください。';
       return NextResponse.json(
         {
           message: 'Textract の呼び出しに失敗しました',
@@ -127,8 +133,7 @@ export async function POST(request: NextRequest) {
             httpStatusCode: meta?.httpStatusCode,
             requestId: meta?.requestId,
           },
-          hint:
-            'IAM権限（textract:AnalyzeDocument）と、S3バケット/オブジェクトの参照権限、リージョン一致を確認してください。',
+          hint: subscriptionHint,
         },
         { status: 500 }
       );

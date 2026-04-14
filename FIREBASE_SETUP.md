@@ -99,6 +99,19 @@ AWS_BEDROCK_REGION=ap-northeast-1
   - Textract: `AnalyzeDocument`
   - Bedrock: `bedrock:InvokeModel` / `bedrock:Converse`
 
+### Textract が `SubscriptionRequiredException` になる場合
+
+`The AWS Access Key Id needs a subscription for the service` は、**IAM不足ではなく「そのリージョンで Textract が使えない」**ことが多いです（例: 一部の新リージョンでは Textract 未対応）。
+
+**対処（推奨）**
+
+1. [Amazon Textract のリージョン一覧](https://docs.aws.amazon.com/general/latest/gr/textract.html) で **Textract が提供されているリージョン**を選ぶ（例: `ap-southeast-1`, `ap-southeast-2`, `ap-northeast-1`）。
+2. **そのリージョンに S3 バケットを用意**し、`MATSUSHITA_KAI_S3_BUCKET` と `AWS_S3_REGION` をそこに合わせる。
+3. `AWS_TEXTRACT_REGION` を **S3 と同じリージョン**にする（`AnalyzeDocument` の S3 参照は原則同一リージョン）。
+4. Bedrock だけ別リージョンにしたい場合は `AWS_BEDROCK_REGION` のみ分ける。
+
+※ `ap-southeast-7` などで Textract を使う場合は、AWS コンソールで当該リージョンに Textract が表示されるか・利用可能かを先に確認してください。
+
 ### API（Next.js）
 
 - `POST /api/matsushita-kai/upload-url` … Presigned URLを返す
