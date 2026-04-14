@@ -12,6 +12,7 @@ export default function CaddyProfileNewPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -25,6 +26,7 @@ export default function CaddyProfileNewPage() {
         }
         const p = await getProfile();
         setUserId(p.userId);
+        setDisplayName(p.displayName ?? '');
         setReady(true);
       } catch (e) {
         console.error('[caddy-profiles/new]', e);
@@ -79,7 +81,7 @@ export default function CaddyProfileNewPage() {
           throw new Error(`画像のアップロードに失敗しました (${putRes.status})${t ? `\n${t}` : ''}`);
         }
 
-        await addCaddyProfile(userId, {
+        await addCaddyProfile(userId, displayName, {
           golfCourseName: data.golfCourseName,
           caddyName: data.caddyName,
           caddyNumber: data.caddyNumber,
@@ -96,7 +98,7 @@ export default function CaddyProfileNewPage() {
         setSubmitting(false);
       }
     },
-    [userId, router]
+    [userId, displayName, router]
   );
 
   if (!ready) {
