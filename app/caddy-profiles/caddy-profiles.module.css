@@ -34,6 +34,42 @@
   text-align: center;
 }
 
+.searchRow {
+  margin-bottom: 20px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.searchLabel {
+  display: block;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #06c755;
+}
+
+.searchHint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
 .primaryLink {
   display: inline-block;
   background: #06c755;

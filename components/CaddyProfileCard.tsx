@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { CaddyProfileDoc } from '@/types/caddy-profile';
+import { getUserProfile } from '@/lib/firestore';
+import { deleteCaddyProfile } from '@/lib/firestore-caddy';
 import styles from './CaddyProfileCard.module.css';
 
 function formatCreatedAt(doc: CaddyProfileDoc): string {
@@ -27,11 +31,23 @@ function formatCreatedAt(doc: CaddyProfileDoc): string {
 
 type Props = {
   profile: CaddyProfileDoc;
+  currentUserId: string | null;
+  onDeleted?: () => void;
 };
 
-export function CaddyProfileCard({ profile }: Props) {
+export function CaddyProfileCard({
+  profile,
+  currentUserId,
+  onDeleted,
+}: Props) {
+  const router = useRouter();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoErr, setPhotoErr] = useState(false);
+  const [posterLabel, setPosterLabel] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwnPost =
+    Boolean(currentUserId) && profile.posterId === currentUserId;
 
   useEffect(() => {
     let cancelled = false;
@@ -60,11 +76,74 @@ export function CaddyProfileCard({ profile }: Props) {
     };
   }, [profile.photoS3Key]);
 
+  useEffect(() => {
+    const name = profile.posterDisplayName?.trim();
+    if (name) {
+      setPosterLabel(name);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const u = await getUserProfile(profile.posterId);
+        if (!cancelled) {
+          setPosterLabel(u?.displayName?.trim() || profile.posterId);
+        }
+      } catch {
+        if (!cancelled) setPosterLabel(profile.posterId);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.posterId, profile.posterDisplayName]);
+
   const created = formatCreatedAt(profile);
+
+  const handleEdit = () => {
+    if (!profile.id) return;
+    router.push(`/caddy-profiles/${profile.id}/edit`);
+  };
+
+  const handleDelete = async () => {
+    if (!profile.id || !isOwnPost) return;
+    if (!confirm('このプロフィールを削除しますか？')) return;
+    setDeleting(true);
+    try {
+      await deleteCaddyProfile(profile.id);
+      onDeleted?.();
+    } catch (e) {
+      console.error(e);
+      alert('削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <article className={styles.card}>
       <div className={styles.photoWrap}>
+        {isOwnPost && profile.id && (
+          <div className={styles.cardActions}>
+            <button
+              type="button"
+              className={styles.editButton}
+              onClick={handleEdit}
+              aria-label="修正"
+            >
+              修正
+            </button>
+            <button
+              type="button"
+              className={styles.deleteButton}
+              onClick={handleDelete}
+              disabled={deleting}
+              aria-label="削除"
+            >
+              {deleting ? '…' : '×'}
+            </button>
+          </div>
+        )}
         {photoUrl && !photoErr ? (
           <img
             src={photoUrl}
@@ -78,6 +157,15 @@ export function CaddyProfileCard({ profile }: Props) {
         )}
       </div>
       <div className={styles.body}>
+        <p className={styles.posterName}>
+          投稿者:{' '}
+          <Link
+            href={`/profile/${profile.posterId}`}
+            className={styles.profileLink}
+          >
+            {posterLabel || '読み込み中...'}
+          </Link>
+        </p>
         <p className={styles.course}>{profile.golfCourseName}</p>
         <p className={styles.meta}>
           <strong>名前</strong>
@@ -91,9 +179,7 @@ export function CaddyProfileCard({ profile }: Props) {
           <strong>年齢</strong>
           {profile.age != null ? `${profile.age}歳` : '—'}
         </p>
-        {created && (
-          <p className={styles.date}>登録: {created}</p>
-        )}
+        {created && <p className={styles.date}>登録: {created}</p>}
       </div>
     </article>
   );

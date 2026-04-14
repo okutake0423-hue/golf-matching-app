@@ -42,9 +42,13 @@ export default function CaddyProfileNewPage() {
       caddyName: string;
       caddyNumber: string;
       age: number | null;
-      photoFile: File;
+      photoFile: File | null;
     }) => {
       if (!userId) return;
+      if (!data.photoFile) {
+        setSaveError('写真を選択してください');
+        return;
+      }
       setSubmitting(true);
       setSaveError(null);
       try {

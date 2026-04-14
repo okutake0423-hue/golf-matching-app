@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { initLiff, isLoggedIn } from '@/lib/liff';
+import { initLiff, isLoggedIn, getProfile } from '@/lib/liff';
 import { listCaddyProfiles } from '@/lib/firestore-caddy';
 import { CaddyProfileCard } from '@/components/CaddyProfileCard';
 import type { CaddyProfileDoc } from '@/types/caddy-profile';
@@ -12,9 +12,11 @@ import styles from './caddy-profiles.module.css';
 export default function CaddyProfilesListPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [items, setItems] = useState<CaddyProfileDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [courseSearch, setCourseSearch] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,6 +40,8 @@ export default function CaddyProfilesListPage() {
           router.replace('/');
           return;
         }
+        const p = await getProfile();
+        setCurrentUserId(p.userId);
         setReady(true);
       } catch (e) {
         console.error('[caddy-profiles] init', e);
@@ -51,6 +55,14 @@ export default function CaddyProfilesListPage() {
     if (!ready) return;
     load();
   }, [ready, load]);
+
+  const filteredItems = useMemo(() => {
+    const q = courseSearch.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((p) =>
+      p.golfCourseName.toLowerCase().includes(q)
+    );
+  }, [items, courseSearch]);
 
   if (!ready) {
     return (
@@ -72,6 +84,26 @@ export default function CaddyProfilesListPage() {
           </Link>
         </div>
 
+        <div className={styles.searchRow}>
+          <label htmlFor="cp-course-search" className={styles.searchLabel}>
+            ゴルフコースで検索
+          </label>
+          <input
+            id="cp-course-search"
+            type="search"
+            value={courseSearch}
+            onChange={(e) => setCourseSearch(e.target.value)}
+            className={styles.searchInput}
+            placeholder="コース名の一部を入力"
+            autoComplete="off"
+          />
+          {courseSearch.trim() !== '' && (
+            <p className={styles.searchHint}>
+              {filteredItems.length}件（全{items.length}件）
+            </p>
+          )}
+        </div>
+
         {error && (
           <div className={styles.errorBanner} role="alert">
             {error}
@@ -84,10 +116,19 @@ export default function CaddyProfilesListPage() {
           <p className={styles.empty}>
             登録がありません。「新規登録」から追加してください。
           </p>
+        ) : filteredItems.length === 0 ? (
+          <p className={styles.empty}>
+            検索に一致するコースがありません。キーワードを変えてください。
+          </p>
         ) : (
           <div className={styles.grid}>
-            {items.map((p) => (
-              <CaddyProfileCard key={p.id ?? p.photoS3Key} profile={p} />
+            {filteredItems.map((p) => (
+              <CaddyProfileCard
+                key={p.id ?? p.photoS3Key}
+                profile={p}
+                currentUserId={currentUserId}
+                onDeleted={load}
+              />
             ))}
           </div>
         )}

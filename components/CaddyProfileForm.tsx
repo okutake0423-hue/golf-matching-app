@@ -1,26 +1,56 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import styles from './CaddyProfileForm.module.css';
 
+export type CaddyProfileSubmitPayload = {
+  golfCourseName: string;
+  caddyName: string;
+  caddyNumber: string;
+  age: number | null;
+  /** 新規は必須。編集は未選択なら null（既存画像を維持） */
+  photoFile: File | null;
+};
+
 type Props = {
-  onSubmit: (data: {
+  variant?: 'create' | 'edit';
+  initialValues?: {
     golfCourseName: string;
     caddyName: string;
     caddyNumber: string;
     age: number | null;
-    photoFile: File;
-  }) => Promise<void>;
+  };
+  onSubmit: (data: CaddyProfileSubmitPayload) => Promise<void>;
   submitting?: boolean;
 };
 
-export function CaddyProfileForm({ onSubmit, submitting }: Props) {
+export function CaddyProfileForm({
+  variant = 'create',
+  onSubmit,
+  submitting,
+  initialValues,
+}: Props) {
   const [golfCourseName, setGolfCourseName] = useState('');
   const [caddyName, setCaddyName] = useState('');
   const [caddyNumber, setCaddyNumber] = useState('');
   const [ageStr, setAgeStr] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isEdit = variant === 'edit';
+
+  useEffect(() => {
+    if (!initialValues || !isEdit) return;
+    setGolfCourseName(initialValues.golfCourseName);
+    setCaddyName(initialValues.caddyName);
+    setCaddyNumber(initialValues.caddyNumber);
+    setAgeStr(
+      initialValues.age != null && Number.isFinite(initialValues.age)
+        ? String(initialValues.age)
+        : ''
+    );
+    setPhotoFile(null);
+  }, [initialValues, isEdit]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -38,7 +68,7 @@ export function CaddyProfileForm({ onSubmit, submitting }: Props) {
         setError('番号を入力してください');
         return;
       }
-      if (!photoFile) {
+      if (!isEdit && !photoFile) {
         setError('写真を選択してください');
         return;
       }
@@ -56,15 +86,25 @@ export function CaddyProfileForm({ onSubmit, submitting }: Props) {
         caddyName: caddyName.trim(),
         caddyNumber: caddyNumber.trim(),
         age,
-        photoFile,
+        photoFile: photoFile ?? null,
       });
     },
-    [golfCourseName, caddyName, caddyNumber, ageStr, photoFile, onSubmit]
+    [
+      golfCourseName,
+      caddyName,
+      caddyNumber,
+      ageStr,
+      photoFile,
+      onSubmit,
+      isEdit,
+    ]
   );
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h2 className={styles.title}>キャディープロフィールを登録</h2>
+      <h2 className={styles.title}>
+        {isEdit ? 'キャディープロフィールを修正' : 'キャディープロフィールを登録'}
+      </h2>
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.field}>
@@ -132,7 +172,7 @@ export function CaddyProfileForm({ onSubmit, submitting }: Props) {
 
       <div className={styles.field}>
         <label htmlFor="cp-photo" className={styles.label}>
-          写真
+          写真{isEdit ? '（変更する場合のみ選択）' : ''}
         </label>
         <input
           id="cp-photo"
@@ -149,7 +189,13 @@ export function CaddyProfileForm({ onSubmit, submitting }: Props) {
           className={styles.submit}
           disabled={submitting}
         >
-          {submitting ? '登録中...' : '登録する'}
+          {submitting
+            ? isEdit
+              ? '保存中...'
+              : '登録中...'
+            : isEdit
+              ? '保存する'
+              : '登録する'}
         </button>
       </div>
     </form>
