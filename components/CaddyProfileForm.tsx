@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import type { CaddyScore123 } from '@/types/caddy-profile';
 import styles from './CaddyProfileForm.module.css';
 
 export type CaddyProfileSubmitPayload = {
@@ -8,6 +9,8 @@ export type CaddyProfileSubmitPayload = {
   caddyName: string;
   caddyNumber: string;
   age: number | null;
+  charmScore: CaddyScore123;
+  lineReadingScore: CaddyScore123;
   /** 新規は必須。編集は未選択なら null（既存画像を維持） */
   photoFile: File | null;
 };
@@ -19,10 +22,14 @@ type Props = {
     caddyName: string;
     caddyNumber: string;
     age: number | null;
+    charmScore: CaddyScore123 | null;
+    lineReadingScore: CaddyScore123 | null;
   };
   onSubmit: (data: CaddyProfileSubmitPayload) => Promise<void>;
   submitting?: boolean;
 };
+
+const SCORES: readonly CaddyScore123[] = [1, 2, 3];
 
 export function CaddyProfileForm({
   variant = 'create',
@@ -34,6 +41,10 @@ export function CaddyProfileForm({
   const [caddyName, setCaddyName] = useState('');
   const [caddyNumber, setCaddyNumber] = useState('');
   const [ageStr, setAgeStr] = useState('');
+  const [charmScore, setCharmScore] = useState<CaddyScore123 | null>(null);
+  const [lineReadingScore, setLineReadingScore] = useState<CaddyScore123 | null>(
+    null
+  );
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +60,8 @@ export function CaddyProfileForm({
         ? String(initialValues.age)
         : ''
     );
+    setCharmScore(initialValues.charmScore ?? 2);
+    setLineReadingScore(initialValues.lineReadingScore ?? 2);
     setPhotoFile(null);
   }, [initialValues, isEdit]);
 
@@ -72,6 +85,10 @@ export function CaddyProfileForm({
         setError('写真を選択してください');
         return;
       }
+      if (charmScore == null || lineReadingScore == null) {
+        setError('愛嬌・ライン読みをそれぞれ選択してください');
+        return;
+      }
       let age: number | null = null;
       if (ageStr.trim() !== '') {
         const n = parseInt(ageStr, 10);
@@ -86,6 +103,8 @@ export function CaddyProfileForm({
         caddyName: caddyName.trim(),
         caddyNumber: caddyNumber.trim(),
         age,
+        charmScore,
+        lineReadingScore,
         photoFile: photoFile ?? null,
       });
     },
@@ -94,6 +113,8 @@ export function CaddyProfileForm({
       caddyName,
       caddyNumber,
       ageStr,
+      charmScore,
+      lineReadingScore,
       photoFile,
       onSubmit,
       isEdit,
@@ -169,6 +190,50 @@ export function CaddyProfileForm({
           />
         </div>
       </div>
+
+      <fieldset className={styles.fieldset}>
+        <legend className={styles.legend}>愛嬌</legend>
+        <p className={styles.scoreHint}>1〜3から選択（3が高い）</p>
+        <div className={styles.scoreOptions} role="radiogroup" aria-label="愛嬌">
+          {SCORES.map((n) => (
+            <label key={`charm-${n}`} className={styles.scoreLabel}>
+              <input
+                type="radio"
+                name="charmScore"
+                value={n}
+                checked={charmScore === n}
+                onChange={() => setCharmScore(n)}
+                disabled={submitting}
+              />
+              <span>{n}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className={styles.fieldset}>
+        <legend className={styles.legend}>ライン読み</legend>
+        <p className={styles.scoreHint}>1〜3から選択（3が高い）</p>
+        <div
+          className={styles.scoreOptions}
+          role="radiogroup"
+          aria-label="ライン読み"
+        >
+          {SCORES.map((n) => (
+            <label key={`line-${n}`} className={styles.scoreLabel}>
+              <input
+                type="radio"
+                name="lineReadingScore"
+                value={n}
+                checked={lineReadingScore === n}
+                onChange={() => setLineReadingScore(n)}
+                disabled={submitting}
+              />
+              <span>{n}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div className={styles.field}>
         <label htmlFor="cp-photo" className={styles.label}>

@@ -179,6 +179,14 @@ export function CaddyProfileCard({
           <strong>年齢</strong>
           {profile.age != null ? `${profile.age}歳` : '—'}
         </p>
+        <p className={styles.meta}>
+          <strong>愛嬌</strong>
+          {profile.charmScore != null ? profile.charmScore : '—'}
+        </p>
+        <p className={styles.meta}>
+          <strong>ライン読み</strong>
+          {profile.lineReadingScore != null ? profile.lineReadingScore : '—'}
+        </p>
         {created && <p className={styles.date}>登録: {created}</p>}
       </div>
     </article>

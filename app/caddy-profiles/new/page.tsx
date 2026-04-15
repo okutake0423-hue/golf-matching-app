@@ -42,6 +42,8 @@ export default function CaddyProfileNewPage() {
       caddyName: string;
       caddyNumber: string;
       age: number | null;
+      charmScore: 1 | 2 | 3;
+      lineReadingScore: 1 | 2 | 3;
       photoFile: File | null;
     }) => {
       if (!userId) return;
@@ -90,6 +92,8 @@ export default function CaddyProfileNewPage() {
           caddyName: data.caddyName,
           caddyNumber: data.caddyNumber,
           age: data.age,
+          charmScore: data.charmScore,
+          lineReadingScore: data.lineReadingScore,
           photoS3Key: key,
         });
 

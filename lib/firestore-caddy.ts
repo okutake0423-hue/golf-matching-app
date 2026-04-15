@@ -11,9 +11,15 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { CaddyProfileDoc } from '@/types/caddy-profile';
+import type { CaddyProfileDoc, CaddyScore123 } from '@/types/caddy-profile';
 
 const COLLECTION = 'caddy_profiles';
+
+function parseScore123(v: unknown): CaddyScore123 | null {
+  const n = typeof v === 'number' ? v : parseInt(String(v ?? ''), 10);
+  if (n === 1 || n === 2 || n === 3) return n;
+  return null;
+}
 
 export async function addCaddyProfile(
   posterId: string,
@@ -23,6 +29,8 @@ export async function addCaddyProfile(
     caddyName: string;
     caddyNumber: string;
     age: number | null;
+    charmScore: CaddyScore123;
+    lineReadingScore: CaddyScore123;
     photoS3Key: string;
   }
 ): Promise<string> {
@@ -34,6 +42,8 @@ export async function addCaddyProfile(
     caddyName: data.caddyName.trim(),
     caddyNumber: data.caddyNumber.trim(),
     age: data.age,
+    charmScore: data.charmScore,
+    lineReadingScore: data.lineReadingScore,
     photoS3Key: data.photoS3Key,
     createdAt: serverTimestamp(),
   });
@@ -55,6 +65,8 @@ export async function listCaddyProfiles(): Promise<CaddyProfileDoc[]> {
       caddyName: String(data.caddyName ?? ''),
       caddyNumber: String(data.caddyNumber ?? ''),
       age: typeof data.age === 'number' ? data.age : null,
+      charmScore: parseScore123(data.charmScore),
+      lineReadingScore: parseScore123(data.lineReadingScore),
       photoS3Key: String(data.photoS3Key ?? ''),
       createdAt: data.createdAt,
     } as CaddyProfileDoc);
@@ -77,6 +89,8 @@ export async function getCaddyProfileById(
     caddyName: String(data.caddyName ?? ''),
     caddyNumber: String(data.caddyNumber ?? ''),
     age: typeof data.age === 'number' ? data.age : null,
+    charmScore: parseScore123(data.charmScore),
+    lineReadingScore: parseScore123(data.lineReadingScore),
     photoS3Key: String(data.photoS3Key ?? ''),
     createdAt: data.createdAt,
   } as CaddyProfileDoc;
@@ -89,6 +103,8 @@ export async function updateCaddyProfile(
     caddyName: string;
     caddyNumber: string;
     age: number | null;
+    charmScore: CaddyScore123;
+    lineReadingScore: CaddyScore123;
     /** 変更しない場合は undefined */
     photoS3Key?: string;
   }
@@ -99,6 +115,8 @@ export async function updateCaddyProfile(
     caddyName: updates.caddyName.trim(),
     caddyNumber: updates.caddyNumber.trim(),
     age: updates.age,
+    charmScore: updates.charmScore,
+    lineReadingScore: updates.lineReadingScore,
   };
   if (typeof updates.photoS3Key === 'string') {
     payload.photoS3Key = updates.photoS3Key;

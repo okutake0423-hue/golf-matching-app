@@ -80,6 +80,8 @@ export default function CaddyProfileEditPage() {
       caddyName: string;
       caddyNumber: string;
       age: number | null;
+      charmScore: 1 | 2 | 3;
+      lineReadingScore: 1 | 2 | 3;
       photoFile: File | null;
     }) => {
       if (!profileId || !profile) return;
@@ -129,6 +131,8 @@ export default function CaddyProfileEditPage() {
           caddyName: data.caddyName,
           caddyNumber: data.caddyNumber,
           age: data.age,
+          charmScore: data.charmScore,
+          lineReadingScore: data.lineReadingScore,
           ...(photoS3Key ? { photoS3Key } : {}),
         });
 
@@ -184,6 +188,8 @@ export default function CaddyProfileEditPage() {
             caddyName: profile.caddyName,
             caddyNumber: profile.caddyNumber,
             age: profile.age,
+            charmScore: profile.charmScore,
+            lineReadingScore: profile.lineReadingScore,
           }}
           onSubmit={handleSubmit}
           submitting={submitting}
