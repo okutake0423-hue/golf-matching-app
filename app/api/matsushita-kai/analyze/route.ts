@@ -65,6 +65,20 @@ function getTextLinesFromTextract(blocks: any[]): string[] {
   return lines;
 }
 
+/** 連続空行を1行にまとめ、行末空白を除き入力トークンを抑える */
+function compactOcrText(text: string): string {
+  const lines = text.split('\n').map((l) => l.trimEnd());
+  const out: string[] = [];
+  let prevEmpty = false;
+  for (const line of lines) {
+    const empty = line.trim() === '';
+    if (empty && prevEmpty) continue;
+    out.push(empty ? '' : line);
+    prevEmpty = empty;
+  }
+  return out.join('\n').trim();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { s3Bucket, s3Key } = await request.json().catch(() => ({}));
@@ -141,7 +155,7 @@ export async function POST(request: NextRequest) {
 
     const blocks = texRes.Blocks ?? [];
     const textLines = getTextLinesFromTextract(blocks);
-    const rawText = textLines.join('\n');
+    const rawText = compactOcrText(textLines.join('\n'));
 
     // Claude 4 系などはオンデマンドの modelId ではなく「推論プロファイル」が必要な場合がある。
     // Converse の modelId には推論プロファイルID（またはARN）を渡せる。
@@ -170,34 +184,22 @@ export async function POST(request: NextRequest) {
     const bedrockRegion = getEnv('AWS_BEDROCK_REGION', 'AWS_REGION') ?? region;
     const bedrock = new BedrockRuntimeClient({ region: bedrockRegion });
 
+    // コンペ名・コース・日付は画像からは取れない前提のため Bedrock には participants のみ依頼しトークンを抑える
     const systemPrompt =
-      'あなたはゴルフコンペのスコア表（松下会）のOCR結果から、指定のJSON形式に整形するアシスタントです。' +
-      '必ずJSONのみを返し、余計な文章は出力しません。';
+      '松下会スコア表のOCRテキストから参加者配列だけをJSONで返す。出力はJSONオブジェクトのみ（説明文禁止）。';
 
     const userPrompt = [
-      '以下はTextractのOCR結果テキストです（改行区切り）。',
-      'このテキストから、松下会の記録データを抽出してJSONにしてください。',
-      '',
-      '【JSONスキーマ】',
-      '{',
-      '  "competitionName": string,',
-      '  "golfCourseName": string,',
-      '  "dateStr": "YYYY-MM-DD",',
-      '  "participants": [',
-      '    { "displayName": string, "group": string, "grossOut": number|null, "grossIn": number|null, "handicap": number|null, "netScore": number|null, "rank": number|null }',
-      '  ]',
-      '}',
-      '',
-      '【ルール】',
-      '- 不明な項目は null または空文字にする（推測で埋めない）',
-      '- participants は名前がある行のみ',
-      '- Out/In は9Hずつのグロス',
-      '- 数字は半角でJSON number（文字列にしない）',
-      '',
-      '--- OCR TEXT START ---',
+      'OCR:',
       rawText,
-      '--- OCR TEXT END ---',
+      '',
+      '返却形式: {"participants":[{"displayName":"","group":"","grossOut":null,"grossIn":null,"handicap":null,"netScore":null,"rank":null}]}',
+      'ルール: 名がある行のみ; 不明はnull; Out/Inは各9Hグロス; 数値はJSONのnumber。',
     ].join('\n');
+
+    const maxTokensEnv = getEnv('BEDROCK_MAX_OUTPUT_TOKENS');
+    const maxTokens = maxTokensEnv
+      ? Math.min(8192, Math.max(256, parseInt(maxTokensEnv, 10) || 2048))
+      : 2048;
 
     let brRes: any;
     try {
@@ -206,7 +208,7 @@ export async function POST(request: NextRequest) {
           modelId,
           system: [{ text: systemPrompt }],
           messages: [{ role: 'user', content: [{ text: userPrompt }] }],
-          inferenceConfig: { temperature: 0 },
+          inferenceConfig: { temperature: 0, maxTokens },
         })
       );
     } catch (brErr: any) {
@@ -279,10 +281,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // コンペ名・コース・日付は手入力前提（画像からは抽出しない）。Bedrock 出力は使わない。
     const normalized = {
-      competitionName: toString(parsed.competitionName).trim() || '松下会',
-      golfCourseName: toString(parsed.golfCourseName).trim(),
-      dateStr: toString(parsed.dateStr).trim(),
+      competitionName: '松下会',
+      golfCourseName: '',
+      dateStr: '',
       participants: normalizeParticipants(parsed.participants),
     };
 
@@ -290,6 +293,8 @@ export async function POST(request: NextRequest) {
       ...normalized,
       debug: {
         textractLineCount: textLines.length,
+        ocrCharCount: rawText.length,
+        bedrockMaxOutputTokens: maxTokens,
       },
     });
   } catch (e) {
