@@ -79,6 +79,41 @@ function compactOcrText(text: string): string {
   return out.join('\n').trim();
 }
 
+/** Converse 応答のトークン使用量（SDK / モデルでキー名が揃わない場合に備えて緩く取得） */
+function extractBedrockUsage(res: unknown): {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+} {
+  if (!res || typeof res !== 'object') return {};
+  const r = res as Record<string, unknown>;
+  const u = (r.usage ??
+    (r as { Usage?: unknown }).Usage) as Record<string, unknown> | undefined;
+  if (!u || typeof u !== 'object') return {};
+  const num = (v: unknown): number | undefined =>
+    typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+  return {
+    inputTokens:
+      num(u.inputTokens) ??
+      num(u.inputTokenCount) ??
+      num((u as { input_tokens?: unknown }).input_tokens),
+    outputTokens:
+      num(u.outputTokens) ??
+      num(u.outputTokenCount) ??
+      num((u as { output_tokens?: unknown }).output_tokens),
+    totalTokens:
+      num(u.totalTokens) ?? num((u as { total_tokens?: unknown }).total_tokens),
+  };
+}
+
+/** ログ用: OCR 本文の先頭・末尾だけ（全文は長大になりうるため） */
+function ocrTextForLogPreview(text: string, head = 240, tail = 120): string {
+  if (text.length <= head + tail + 20) return text;
+  return `${text.slice(0, head)}\n… (${text.length} chars) …\n${text.slice(-tail)}`;
+}
+
+const LOG_PREFIX = '[matsushita-kai/analyze]';
+
 export async function POST(request: NextRequest) {
   try {
     const { s3Bucket, s3Key } = await request.json().catch(() => ({}));
@@ -201,6 +236,33 @@ export async function POST(request: NextRequest) {
       ? Math.min(8192, Math.max(256, parseInt(maxTokensEnv, 10) || 2048))
       : 2048;
 
+    const verbosePromptLog =
+      getEnv('MATSUSHITA_KAI_ANALYZE_VERBOSE_LOG', 'ANALYZE_VERBOSE_LOG') ===
+        '1' ||
+      getEnv('MATSUSHITA_KAI_ANALYZE_VERBOSE_LOG', 'ANALYZE_VERBOSE_LOG') ===
+        'true';
+
+    const bedrockPreRequest = {
+      phase: 'before_bedrock_converse' as const,
+      s3Bucket: bucket,
+      s3Key: key,
+      textractLineCount: textLines.length,
+      ocrCharCount: rawText.length,
+      systemPromptCharLength: systemPrompt.length,
+      userPromptCharLength: userPrompt.length,
+      /** 厳密なトークン数ではないが、入力サイズの目安 */
+      approxCombinedCharLength: systemPrompt.length + userPrompt.length,
+      bedrockRegion,
+      modelId,
+      inferenceConfig: { temperature: 0, maxTokens },
+      ocrTextPreview: ocrTextForLogPreview(rawText),
+    };
+    console.log(LOG_PREFIX, JSON.stringify(bedrockPreRequest));
+    if (verbosePromptLog) {
+      console.log(LOG_PREFIX, 'systemPrompt全文:\n', systemPrompt);
+      console.log(LOG_PREFIX, 'userPrompt全文:\n', userPrompt);
+    }
+
     let brRes: any;
     try {
       brRes = await bedrock.send(
@@ -234,10 +296,23 @@ export async function POST(request: NextRequest) {
       } else if (isSubscription) {
         bedrockHint =
           'BedrockのModel access（利用許可/サブスクリプション）を有効化してください。Bedrockコンソール→Model accessで対象モデルをEnable/Request access。';
-      } else if (needsInferenceProfile) {
+      } else       if (needsInferenceProfile) {
         bedrockHint =
           'このモデルはオンデマンドのモデルIDでは呼べません。AWSコンソール → Amazon Bedrock → Inference profiles で、利用するリージョンの「推論プロファイルID」（またはARN）をコピーし、環境変数 BEDROCK_INFERENCE_PROFILE_ID に設定してください（従来の BEDROCK_MODEL_ID は空にするか、推論プロファイルを優先します）。';
       }
+      console.error(
+        LOG_PREFIX,
+        'Bedrock 失敗時の直前情報',
+        JSON.stringify(bedrockPreRequest)
+      );
+      console.error(
+        LOG_PREFIX,
+        'Bedrock エラー',
+        brErr?.name,
+        brErr?.message,
+        'requestId:',
+        meta?.requestId
+      );
       return NextResponse.json(
         {
           message: 'Bedrock の呼び出しに失敗しました',
@@ -252,10 +327,24 @@ export async function POST(request: NextRequest) {
             requestId: meta?.requestId,
           },
           hint: bedrockHint,
+          debug: {
+            bedrockPreRequest,
+          },
         },
         { status: 500 }
       );
     }
+
+    const bedrockUsage = extractBedrockUsage(brRes);
+    const awsRequestId = (brRes as { $metadata?: { requestId?: string } })
+      ?.$metadata?.requestId;
+    const postBedrock = {
+      phase: 'after_bedrock_converse' as const,
+      ...bedrockUsage,
+      stopReason: brRes?.stopReason,
+      awsRequestId,
+    };
+    console.log(LOG_PREFIX, JSON.stringify(postBedrock));
 
     const contentParts = brRes.output?.message?.content as any[] | undefined;
     const outText =
@@ -295,6 +384,20 @@ export async function POST(request: NextRequest) {
         textractLineCount: textLines.length,
         ocrCharCount: rawText.length,
         bedrockMaxOutputTokens: maxTokens,
+        prompt: {
+          systemCharLength: systemPrompt.length,
+          userCharLength: userPrompt.length,
+          combinedCharLength: systemPrompt.length + userPrompt.length,
+        },
+        bedrock: {
+          region: bedrockRegion,
+          modelId,
+          inferenceConfig: { temperature: 0, maxTokens },
+          usage: bedrockUsage,
+          stopReason: brRes?.stopReason ?? null,
+          awsRequestId: awsRequestId ?? null,
+        },
+        bedrockPreRequest,
       },
     });
   } catch (e) {
